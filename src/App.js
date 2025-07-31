@@ -60,21 +60,6 @@ function SunIcon({ className }) { return (<svg className={className} fill="none"
 function MoonIcon({ className }) { return (<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>); }
 function DesktopIcon({ className }) { return (<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>); }
 
-function FormInput({ label, ...props }) {
-    return (
-        <div className="w-full mb-6 text-left">
-            <label style={{ fontFamily: 'Inter, sans-serif' }} className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                {label}
-            </label>
-            <input 
-                style={{ fontFamily: 'Inter, sans-serif' }}
-                className="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-800 dark:text-gray-200 leading-tight focus:outline-none focus:ring-2 bg-white dark:bg-gray-700 dark:border-gray-600 sz-focus-ring"
-                {...props}
-            />
-        </div>
-    );
-};
-
 // --- MODALI ---
 function SettingsModal({ currentTheme, onThemeChange, onClose }) {
     return (
@@ -624,6 +609,22 @@ function Dashboard({ events, isEventsLoading, onSelectEvent, onNavigate, onDelet
         </div>
     );
 }
+
+// --- DEFINIZIONE COMPONENTE SPOSTATA PER RISOLVERE ERRORE DI BUILD ---
+function FormInput({ label, ...props }) {
+    return (
+        <div className="w-full mb-6 text-left">
+            <label style={{ fontFamily: 'Inter, sans-serif' }} className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                {label}
+            </label>
+            <input 
+                style={{ fontFamily: 'Inter, sans-serif' }}
+                className="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-800 dark:text-gray-200 leading-tight focus:outline-none focus:ring-2 bg-white dark:bg-gray-700 dark:border-gray-600 sz-focus-ring"
+                {...props}
+            />
+        </div>
+    );
+};
 
 function CreateEventForm({ onSave, onCancel, isSaving }) {
     const [eventName, setEventName] = useState('');
