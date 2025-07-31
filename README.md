@@ -30,10 +30,6 @@ SeatZen è una web application professionale progettata per semplificare e autom
 
 
 
-Questo progetto è stato creato con \[Create React App](https://github.com/facebook/create-react-app).
-
-
-
 \### Prerequisiti
 
 
