@@ -12,11 +12,12 @@ const appId = 'seatzen-prod-app';
 // --- COSTANTI ---
 const AGE_RANGES = [ "Non specificata", "0-2 anni", "3-12 anni", "13-17 anni", "18-25 anni", "26-40 anni", "41-60 anni", "61+ anni" ];
 const YOUNG_CHILD_RANGES = ["0-2 anni", "3-12 anni"];
+const STAFF_ROLES = ["Fotografi/Videomaker", "Intrattenimento", "Staff Location", "Ospiti Speciali", "Altro..."];
 
 
 // --- COMPONENTI GRAFICI (SVG & UI) ---
 const IluminariLogo = ({ className }) => ( <svg className={className} id="Livello_2" data-name="Livello 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304.55 55.49"><g id="Livello_1-2" data-name="Livello 1"><g id="Avatar_Black" data-name="Avatar Black"><g><g><path d="M.96,1.04h-.96v2.37h.96c1.47,0,1.82,0,1.82,1.98v44.81c0,1.98-.46,1.98-1.82,1.98h-.96v2.29h9.88v-2.29h-.96c-1.36,0-1.82,0-1.82-1.98V5.38c0-1.98.35-1.98,1.82-1.98h.96V1.04H.96Z"/><path d="M50.95,41.8h-.96v.96c0,8.26-.53,8.75-4.72,8.75h-9.43V5.38c0-1.98.35-1.98,1.82-1.98h.96V1.04h-9.88v2.37h.96c1.47,0,1.82,0,1.82,1.98v44.81c0,1.98-.46,1.98-1.82,1.98h-.96v2.29h23.45v-12.67h-1.25Z"/><path d="M83.32,47.68h-.96v.96c0,2.4-1.07,3.89-2.79,3.89-1.62,0-2.44-3.22-2.44-9.56V1.04h-7.09v2.29h.96c1.36,0,1.82,0,1.82,1.98v28.69c0,12.04-4.36,18.53-8.47,18.53-4.85,0-5.23-6.98-5.23-9.12V1.04h-7.09v2.29h.96c1.36,0,1.82,0,1.82,1.98v37.08c0,7.59,4.01,13.1,9.54,13.1,3.7,0,6.82-2.22,9.14-6.48,1.19,5.26,3.75,6.48,5.86,6.48,3.9,0,5.68-3.55,5.68-6.85v-.96h-1.7Z"/><path d="M115.7,1.04h-.66l-.24.61-11.59,29.7L93.1,1.69l-.22-.65h-7.39v2.29h.96c1.36,0,1.82,0,1.82,1.98v44.88c0,1.98-.46,1.98-1.82,1.98h-.96v2.29h8.29v-2.29h-.96c-1.36,0-1.82,0-1.82-1.98V9.22s.02.05.03.08c1.71,4.99,4.55,13.32,9.4,27.63l-3.17,8.28c-1.05,2.55-.78,5.84.66,7.98.99,1.48,2.49,2.3,4.22,2.3,1.88,0,3.46-.82,4.58-2.38,1.55-2.16,1.98-5.58,1.05-8.31l-3.18-9.38,10.62-27.14v41.91c0,1.98-.39,1.98-1.82,1.98h-.96v2.29h9.88v-2.29h-.96c-1.36,0-1.82,0-1.82-1.98V5.31c0-1.98.46-1.98,1.82-1.98h.96V1.04h-6.59ZM103.72,51.35c-.58.9-1.45,1.17-1.61,1.19-.73,0-1.3-.31-1.73-.93-1.05-1.51-.98-4.35-.47-5.71l1.92-4.87c.59,1.77,1.24,3.68,1.95,5.67.67,1.96.65,3.57-.05,4.66Z"/><path d="M130.01,7.75c.27,0,.54-.04.8-.12,1.66-.51,2.68-2.54,2.31-4.62-.33-1.78-1.6-3.01-3.1-3.01h0c-.27,0-.54.04-.8.12-1.72.51-2.74,2.49-2.37,4.62.32,1.75,1.65,3.01,3.16,3.01Z"/><path d="M132.17,50.19V13.62c0-2.27-1.47-4.05-3.35-4.05h-3.75v2.29h.96c1.47,0,1.82,0,1.82,1.98v36.35c0,1.98-.46,1.98-1.82,1.98h-.96v2.29h9.88v-2.29h-.96c-1.36,0-1.82,0-1.82-1.98Z"/><path d="M167.39,1.04h-7.32v2.29h.96c1.36,0,1.82,0,1.82,1.98v36.94L144.53,1.6l-.26-.57h-6.53v2.29h.96c1.36,0,1.82,0,1.82,1.98v44.88c0,1.98-.46,1.98-1.82,1.98h-.96v2.29h8.29v-2.29h-.96c-1.36,0-1.82,0-1.82-1.98V9.5l20.47,45.41h1.85V5.31c0-1.98.39-1.98,1.82-1.98h.96V1.04h-.96Z"/><path d="M205.62,47.68h-.96v.96c0,2.87-1.41,3.89-2.73,3.89-1.66,0-2.5-3.22-2.5-9.56V15.68C199.42,8.45,195.91,0,186.02,0c-4.81,0-11.28,2.6-13.69,9.93l-.28.85.83.34,2.5,1.03,1.01.42.29-1.05c1.72-6.32,6.2-8.56,9.52-8.56,7.86,0,8.92,7.06,8.92,13.97v2.95c-9.7.18-24.82,3.27-24.82,20.67,0,8.8,5.07,14.94,12.32,14.94,5.54,0,9.81-3.14,12.72-9.34.66,6.2,2.79,9.34,6.37,9.34,4.12,0,5.62-4.1,5.62-6.85v-.96h-1.7ZM182.61,52.54c-5.09,0-8.01-4.37-8.01-11.99,0-15.83,14.62-17.89,20.51-18.08v4.61c0,5.97-.9,25.45-12.5,25.45Z"/><path d="M234.87,49.28l-12.8-19.41c.2.01.4.02.59.02,5.99,0,12.04-4.92,12.04-15.9,0-8.23-4.91-12.96-13.46-12.96h-12.55v2.29h.96c1.36,0,1.82,0,1.82,1.98v44.88c0,1.98-.46,1.98-1.82,1.98h-.96v2.29h9.88v-2.29h-.96c-1.36,0-1.82,0-1.82-1.98v-21.49l14.76,22.24c1.47,2.24,3.67,3.52,6.03,3.52h2.78v-2.29h-.96c-1.25,0-1.72-.27-3.52-2.89ZM221.58,26.49c-1.74,0-3.55-.61-5.37-1.83l-.42-.28V5.31c0-.84,2.07-1.32,5.68-1.32,3.17,0,8.52,2.14,8.52,10.15,0,7.16-3.54,12.35-8.41,12.35Z"/><path d="M246.22,7.75c.27,0,.54-.04.8-.12,1.66-.51,2.68-2.54,2.31-4.62-.33-1.78-1.6-3.01-3.1-3.01h0c-.27,0-.54.04-.8.12-1.72.51-2.74,2.49-2.37,4.62.32,1.75,1.65,3.01,3.16,3.01Z"/><path d="M250.21,52.17c-1.36,0-1.82,0-1.82-1.98V13.62c0-2.27-1.47-4.05-3.35-4.05h-3.75v2.29h.96c1.47,0,1.82,0,1.82,1.98v36.35c0,1.98-.46,1.98-1.82,1.98h-.96v2.29h9.88v-2.29h-.96Z"/></g><g><path d="M272.67,15.88c2.22-1.52,3.69-4.12,3.69-7.08,0-4.97-4.03-8.31-10.04-8.31-4.38,0-7.91,1.94-9.2,5.06-1.13,2.73-.32,5.84,2.16,8.32l.57.57,2.39-.9-.62-1.24c-1.17-2.32-1.26-4.51-.24-6.15.99-1.6,2.94-2.56,5.21-2.56,3.64,0,5.48,1.73,5.48,5.14,0,5.49-5.51,5.91-7.2,5.91h-1.24v3.13h1.24c4.09,0,8.45.51,8.45,6.6,0,4.77-3.38,6.9-6.73,6.9-2.27,0-4.22-.96-5.21-2.56-1.01-1.64-.93-3.83.24-6.15l.62-1.24-2.39-.9-.57.57c-2.48,2.48-3.29,5.59-2.16,8.32,1.29,3.12,4.82,5.06,9.2,5.06,4.69,0,11.29-3.1,11.29-9.99,0-4.67-2.36-7.22-4.94-8.48Z"/><path d="M287.53,1.09h-10.04v2.75h1.24c.48,0,.72.02.83.05.02.07.04.2.04.43v26.25c0,.23-.02.36-.04.42-.1.03-.32.06-.83.06h-1.24v2.7h10.04c12.55,0,17.02-8.41,17.02-16.29s-4.47-16.37-17.02-16.37ZM287.71,30.66c-2.55,0-3.47-.21-3.8-.35V4.56c.31-.13,1.22-.38,3.8-.38,5.65,0,12.25,3.48,12.25,13.28s-6.33,13.2-12.25,13.2Z"/></g><g><path d="M264.3,41.89h-1.52v-1.52c0-.69-.56-1.25-1.25-1.25s-1.25.56-1.25,1.25v1.52h-1.52c-.69,0-1.25.56-1.25,1.25s.56,1.25,1.25,1.25h1.52v1.52c0,.69.56,1.25,1.25,1.25s1.25-.56,1.25-1.25v-1.52h1.52c.69,0,1.25-.56,1.25-1.25s-.56-1.25-1.25-1.25Z"/><path d="M290.3,41.89h-1.52v-1.52c0-.69-.56-1.25-1.25-1.25s-1.25.56-1.25,1.25v1.52h-1.52c-.69,0-1.25.56-1.25,1.25s.56,1.25,1.25,1.25h1.52v1.52c0,.69.56,1.25,1.25,1.25s1.25-.56,1.25-1.25v-1.52h1.52c.69,0,1.25-.56,1.25-1.25s-.56-1.25-1.25-1.25Z"/><path d="M277.3,50.17h-1.52v-1.52c0-.69-.56-1.25-1.25-1.25s-1.25.56-1.25,1.25v1.52h-1.52c-.69,0-1.25.56-1.25,1.25s.56,1.25,1.25,1.25h1.52v1.52c0,.69.56,1.25,1.25,1.25s1.25-.56,1.25-1.25v-1.52h1.52c.69,0,1.25-.56,1.25-1.25s-.56-1.25-1.25-1.25Z"/><path d="M303.3,50.17h-1.52v-1.52c0-.69-.56-1.25-1.25-1.25s-1.25.56-1.25,1.25v1.52h-1.52c-.69,0-1.25.56-1.25,1.25s.56,1.25,1.25,1.25h1.52v1.52c0,.69.56,1.25,1.25,1.25s1.25-.56,1.25-1.25v-1.52h1.52c.69,0,1.25-.56,1.25-1.25s-.56-1.25-1.25-1.25Z"/></g></g></g></g>
-    </svg>
+</svg>
 );
 
 const GoogleIcon = ({ className }) => (
@@ -106,15 +107,19 @@ const UnlockIcon = ({ className }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8zM5 11h2"></path></svg>
 );
 
+const SettingsIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+);
+
 
 const FormInput = ({ label, ...props }) => (
     <div className="w-full mb-6 text-left">
-        <label style={{ fontFamily: 'Inter, sans-serif' }} className="block text-[#4A5B53] text-sm font-bold mb-2">
+        <label style={{ fontFamily: 'Inter, sans-serif' }} className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
             {label}
         </label>
         <input 
             style={{ fontFamily: 'Inter, sans-serif' }}
-            className="shadow appearance-none border rounded-lg w-full py-3 px-4 text-[#333333] leading-tight focus:outline-none focus:ring-2 focus:ring-[#C09A50] bg-white"
+            className="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-800 dark:text-gray-200 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white dark:bg-gray-700 dark:border-gray-600"
             {...props}
         />
     </div>
@@ -123,11 +128,11 @@ const FormInput = ({ label, ...props }) => (
 // --- MODALI ---
 const DeleteConfirmationModal = ({ title, message, onConfirm, onCancel, isDeleting, confirmText = 'Sì, elimina' }) => (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 animate-fade-in">
-        <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md m-4 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-md m-4 text-center">
             <h2 style={{ fontFamily: 'Lora, serif' }} className="text-2xl font-bold text-red-600 mb-4">{title}</h2>
-            <p className="text-gray-700 mb-6" dangerouslySetInnerHTML={{ __html: message }}></p>
+            <p className="text-gray-700 dark:text-gray-300 mb-6" dangerouslySetInnerHTML={{ __html: message }}></p>
             <div className="flex justify-center space-x-4">
-                <button onClick={onCancel} className="text-gray-600 font-bold py-2 px-6 rounded-lg hover:bg-gray-200">Annulla</button>
+                <button onClick={onCancel} className="text-gray-600 dark:text-gray-300 font-bold py-2 px-6 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">Annulla</button>
                 <button onClick={onConfirm} disabled={isDeleting} className="bg-red-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg hover:bg-red-700 disabled:bg-red-400">
                     {isDeleting ? 'Eliminazione...' : confirmText}
                 </button>
@@ -651,8 +656,11 @@ const CreateEventForm = ({ onSave, onCancel, isSaving }) => {
 };
 
 const EventView = ({ event, db, user, onDeleteEvent }) => {
+    const [operatingMode, setOperatingMode] = useState('invitati'); // 'invitati' or 'staff'
     const [guests, setGuests] = useState([]);
+    const [staff, setStaff] = useState([]);
     const [isLoadingGuests, setIsLoadingGuests] = useState(true);
+    const [isLoadingStaff, setIsLoadingStaff] = useState(true);
     const [tables, setTables] = useState([]);
     const [isLoadingTables, setIsLoadingTables] = useState(true);
     const [isAddingTable, setIsAddingTable] = useState(false);
@@ -690,22 +698,26 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
 
     useEffect(() => {
         if (!db || !user || !event) return;
+
         const guestsPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/guests`;
+        const staffPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/staff`;
         const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
         const groupsPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/strictGroups`;
+
         const unsubGuests = onSnapshot(query(collection(db, guestsPath)), snap => { setGuests(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setIsLoadingGuests(false); }, err => { console.error(err); setIsLoadingGuests(false); });
+        const unsubStaff = onSnapshot(query(collection(db, staffPath)), snap => { setStaff(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setIsLoadingStaff(false); }, err => { console.error(err); setIsLoadingStaff(false); });
         const unsubTables = onSnapshot(query(collection(db, tablesPath)), snap => { setTables(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setIsLoadingTables(false); }, err => { console.error(err); setIsLoadingTables(false); });
         const unsubGroups = onSnapshot(query(collection(db, groupsPath)), snap => { setStrictGroups(snap.docs.map(d => ({ id: d.id, ...d.data() }))); }, err => console.error(err));
-        return () => { unsubGuests(); unsubTables(); unsubGroups(); };
+        
+        return () => { unsubGuests(); unsubStaff(); unsubTables(); unsubGroups(); };
     }, [db, user, event]);
 
     const handleSaveGuest = async (guestId, data) => {
         setIsSavingGuestDetails(true);
-        const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/guests`;
+        const collectionName = operatingMode === 'invitati' ? 'guests' : 'staff';
+        const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${collectionName}`;
         try { 
             const batch = writeBatch(db);
-            let currentGuestId = guestId;
-
             if (guestId) { 
                 const guestRef = doc(db, path, guestId);
                 batch.update(guestRef, data);
@@ -713,7 +725,6 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
                 const guestRef = doc(collection(db, path));
                 batch.set(guestRef, { ...data, createdAt: serverTimestamp(), tableId: null });
             } 
-            
             await batch.commit();
             setEditingGuest(null); 
             setIsCreatingGuest(false); 
@@ -727,7 +738,7 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
     const handleAddTable = async (tableName, tableCapacity, tableShape) => {
         if (!db || !user || !event) return; setIsAddingTable(true);
         const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
-        try { await addDoc(collection(db, path), { name: tableName, capacity: tableCapacity, shape: tableShape, createdAt: serverTimestamp() }); } catch (e) { console.error("Error adding table:", e); } finally { setIsAddingTable(false); }
+        try { await addDoc(collection(db, path), { name: tableName, capacity: tableCapacity, shape: tableShape, mode: operatingMode, createdAt: serverTimestamp() }); } catch (e) { console.error("Error adding table:", e); } finally { setIsAddingTable(false); }
     };
     
     const handleToggleKidsTable = async (e) => {
@@ -837,10 +848,13 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
 
     const handleDrop = async (tableId) => {
         if (!draggedGuestId) return;
-        const guestsOnTable = guests.filter(g => g.tableId === tableId).length;
+        const currentList = operatingMode === 'invitati' ? guests : staff;
+        const guestsOnTable = currentList.filter(g => g.tableId === tableId).length;
         const tableCapacity = tables.find(t => t.id === tableId)?.capacity;
         if (tableId && tableCapacity && guestsOnTable >= tableCapacity) { setDragOverId(null); setDraggedGuestId(null); return; }
-        const guestRef = doc(db, `artifacts/${appId}/users/${user.uid}/events/${event.id}/guests`, draggedGuestId);
+        
+        const collectionName = operatingMode === 'invitati' ? 'guests' : 'staff';
+        const guestRef = doc(db, `artifacts/${appId}/users/${user.uid}/events/${event.id}/${collectionName}`, draggedGuestId);
         try { await updateDoc(guestRef, { tableId }); } catch (e) { console.error("Error updating guest:", e); }
         setDragOverId(null); setDraggedGuestId(null);
     };
@@ -987,8 +1001,11 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
         setIsArranging(false);
     };
 
+    const currentPeople = operatingMode === 'invitati' ? guests : staff;
+    const unassignedPeople = currentPeople.filter(p => !p.tableId);
+    const currentTables = tables.filter(t => t.mode === operatingMode);
+    const isLoadingCurrentList = operatingMode === 'invitati' ? isLoadingGuests : isLoadingStaff;
 
-    const unassignedGuests = guests.filter(g => !g.tableId);
 
     if (!event) return null;
 
@@ -1000,17 +1017,29 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
             {isImporting && <ImportGuestsModal existingGroups={strictGroups} onSave={handleSaveImportedGuests} onClose={() => setIsImporting(false)} isSaving={isSavingImport} />}
 
             <div className="w-full h-full p-4 md:p-8 text-left animate-fade-in" onDragLeave={handleDragLeave}>
-                <div className="flex justify-between items-start mb-8">
+                <div className="flex justify-between items-start mb-4">
                     <h1 style={{ fontFamily: 'Lora, serif' }} className="text-3xl md:text-4xl font-bold text-[#333333]">{event.name}</h1>
                     <button onClick={() => onDeleteEvent(event)} className="flex items-center bg-red-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-red-600 transition-colors">
                         <TrashIcon className="h-4 w-4 mr-2" />
                         Elimina Evento
                     </button>
                 </div>
+
+                <div className="mb-6">
+                    <div className="flex border-b border-gray-200">
+                        <button onClick={() => setOperatingMode('invitati')} className={`py-2 px-4 text-sm font-medium ${operatingMode === 'invitati' ? 'border-b-2 border-yellow-500 text-yellow-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                            Sala Invitati
+                        </button>
+                        <button onClick={() => setOperatingMode('staff')} className={`py-2 px-4 text-sm font-medium ${operatingMode === 'staff' ? 'border-b-2 border-green-500 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                            Sala Staff
+                        </button>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
                     <div className="lg:col-span-1 bg-[#FDFBF7] p-4 md:p-6 rounded-lg shadow-sm flex flex-col">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-[#333333]">Invitati</h3>
+                            <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-[#333333]">{operatingMode === 'invitati' ? 'Invitati' : 'Staff'}</h3>
                              <div className="relative" ref={addMenuRef}>
                                 <button onClick={() => setShowAddMenu(!showAddMenu)} className="bg-[#C09A50] text-white font-bold py-2 px-4 rounded-lg shadow hover:bg-[#b58e48] transition-colors flex items-center">
                                     + Aggiungi
@@ -1018,15 +1047,15 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
                                 </button>
                                 {showAddMenu && (
                                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-30 animate-fade-in">
-                                        <button onClick={() => { setIsCreatingGuest(true); setShowAddMenu(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Invitato Singolo</button>
-                                        <button onClick={() => { setIsAddingFamily(true); setShowAddMenu(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Famiglia / Gruppo</button>
-                                        <button onClick={() => { setIsImporting(true); setShowAddMenu(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importa da File</button>
+                                        <button onClick={() => { setIsCreatingGuest(true); setShowAddMenu(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{operatingMode === 'invitati' ? 'Invitato Singolo' : 'Membro Staff'}</button>
+                                        {operatingMode === 'invitati' && <button onClick={() => { setIsAddingFamily(true); setShowAddMenu(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Famiglia / Gruppo</button>}
+                                        {operatingMode === 'invitati' && <button onClick={() => { setIsImporting(true); setShowAddMenu(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importa da File</button>}
                                     </div>
                                 )}
                              </div>
                         </div>
                         <div className="flex-grow">
-                             <GuestList guests={unassignedGuests} isLoading={isLoadingGuests} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={() => handleDrop(null)} onEditGuest={(guest) => setEditingGuest(guest)} />
+                             <GuestList guests={unassignedPeople} isLoading={isLoadingCurrentList} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={() => handleDrop(null)} onEditGuest={(guest) => setEditingGuest(guest)} />
                         </div>
                     </div>
                     <div className="lg:col-span-2 bg-[#FDFBF7] p-4 md:p-6 rounded-lg shadow-sm">
@@ -1042,17 +1071,17 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
                                     <button onClick={() => setViewMode('list')} className={`px-3 py-1 text-sm rounded-md ${viewMode === 'list' ? 'bg-[#4A5B53] text-white' : 'bg-gray-200'}`}>Elenco</button>
                                     <button onClick={() => setViewMode('map')} className={`px-3 py-1 text-sm rounded-md ${viewMode === 'map' ? 'bg-[#4A5B53] text-white' : 'bg-gray-200'}`}>Mappa</button>
                                 </div>
-                                <button onClick={handleAutoArrange} disabled={isArranging || tables.length === 0} className="w-full sm:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                                <button onClick={handleAutoArrange} disabled={isArranging || currentTables.length === 0} className="w-full sm:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
                                     {isArranging ? 'Elaborazione...' : 'Disponi Automaticamente'}
                                 </button>
                             </div>
                         </div>
                          <AddTableForm onAddTable={handleAddTable} isAdding={isAddingTable} />
-                         <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-[#333333] my-4">Tavoli Creati ({tables.length})</h3>
+                         <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-[#333333] my-4">Tavoli Creati ({currentTables.length})</h3>
                          {isLoadingTables ? <p className="text-gray-500">Caricamento tavoli...</p> : viewMode === 'list' ? (
-                            <TableList tables={tables} guests={guests} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} dragOverId={dragOverId} onEditGuest={(guest) => setEditingGuest(guest)} />
+                            <TableList tables={currentTables} guests={currentPeople} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} dragOverId={dragOverId} onEditGuest={(guest) => setEditingGuest(guest)} />
                          ) : (
-                            <MapView tables={tables} guests={guests} />
+                            <MapView tables={currentTables} guests={currentPeople} />
                          )}
                     </div>
                 </div>
@@ -1061,25 +1090,25 @@ const EventView = ({ event, db, user, onDeleteEvent }) => {
     );
 };
 
-const Sidebar = ({ user, auth, isCollapsed, events, isLoading, onSelectEvent, onNavigate, selectedEventId }) => (
-    <aside className={`bg-white min-h-screen p-4 flex flex-col shadow-lg transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
+const Sidebar = ({ user, auth, isCollapsed, events, isLoading, onSelectEvent, onNavigate, selectedEventId, onToggleTheme }) => (
+    <aside className={`bg-white dark:bg-gray-800 min-h-screen p-4 flex flex-col shadow-lg transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="flex items-center mb-8">
              <SeatZenLogo className="h-10 w-10 flex-shrink-0" />
-            <h2 className={`text-xl text-[#333333] ml-2 flex items-baseline whitespace-nowrap overflow-hidden transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+            <h2 className={`text-xl text-gray-800 dark:text-gray-200 ml-2 flex items-baseline whitespace-nowrap overflow-hidden transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
                 <span style={{ fontFamily: 'Lora, serif' }} className="font-bold">Seat</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }} className="tracking-wider">ZEN</span>
             </h2>
         </div>
         <nav className="flex-grow">
-             <button onClick={() => onNavigate('dashboard')} title="Dashboard" className="w-full flex items-center font-bold text-gray-700 px-3 py-2 rounded-md hover:bg-gray-100 mb-2">
+             <button onClick={() => onNavigate('dashboard')} title="Dashboard" className="w-full flex items-center font-bold text-gray-700 dark:text-gray-300 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 mb-2">
                  <HomeIcon className="h-6 w-6 flex-shrink-0" />
                  <span className={`ml-3 whitespace-nowrap overflow-hidden ${isCollapsed ? 'hidden' : 'inline'}`}>Dashboard</span>
              </button>
-             <button onClick={() => onNavigate('faq')} title="Aiuto & FAQ" className="w-full flex items-center font-bold text-gray-700 px-3 py-2 rounded-md hover:bg-gray-100 mb-4">
+             <button onClick={() => onNavigate('faq')} title="Aiuto & FAQ" className="w-full flex items-center font-bold text-gray-700 dark:text-gray-300 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 mb-4">
                  <HelpIcon className="h-6 w-6 flex-shrink-0" />
                  <span className={`ml-3 whitespace-nowrap overflow-hidden ${isCollapsed ? 'hidden' : 'inline'}`}>Aiuto & FAQ</span>
              </button>
-             <h3 className={`px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isCollapsed ? 'text-center' : 'text-left'}`}>
+             <h3 className={`px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 ${isCollapsed ? 'text-center' : 'text-left'}`}>
                 <span className={isCollapsed ? 'hidden' : 'inline'}>Eventi</span>
                 <span className={isCollapsed ? 'inline text-lg' : 'hidden'}>·</span>
              </h3>
@@ -1087,7 +1116,7 @@ const Sidebar = ({ user, auth, isCollapsed, events, isLoading, onSelectEvent, on
                 <ul className="space-y-1">
                     {events.map(event => (
                         <li key={event.id}>
-                            <button onClick={() => onSelectEvent(event)} title={event.name} className={`w-full text-left text-sm px-3 py-2 rounded-md transition-colors truncate ${selectedEventId === event.id ? 'bg-[#4A5B53] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                            <button onClick={() => onSelectEvent(event)} title={event.name} className={`w-full text-left text-sm px-3 py-2 rounded-md transition-colors truncate ${selectedEventId === event.id ? 'bg-yellow-500 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
                                 <span className={`${isCollapsed ? 'hidden' : 'inline'}`}>{event.name}</span>
                                 {isCollapsed && <span className="w-full text-center font-bold">{event.name.charAt(0)}</span>}
                             </button>
@@ -1096,12 +1125,16 @@ const Sidebar = ({ user, auth, isCollapsed, events, isLoading, onSelectEvent, on
                 </ul>
              )}
         </nav>
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+             <button onClick={onToggleTheme} title="Impostazioni Tema" className="w-full flex items-center font-bold text-gray-700 dark:text-gray-300 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 mb-4">
+                 <SettingsIcon className="h-6 w-6 flex-shrink-0" />
+                 <span className={`ml-3 whitespace-nowrap overflow-hidden ${isCollapsed ? 'hidden' : 'inline'}`}>Tema</span>
+             </button>
             {user && (
                  <div className="flex items-center">
                     {user.photoURL ? <img src={user.photoURL} alt={user.displayName} className="h-10 w-10 rounded-full" /> : <UserAvatarIcon className="h-10 w-10 text-gray-400" />}
                     <div className={`ml-3 overflow-hidden transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                        <p className="text-sm font-semibold text-gray-800 truncate">{user.displayName || user.email}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{user.displayName || user.email}</p>
                         <button onClick={() => signOut(auth)} className="text-xs text-red-500 hover:underline">Logout</button>
                     </div>
                  </div>
@@ -1187,6 +1220,22 @@ function App() {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [deletingEvent, setDeletingEvent] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [theme, setTheme] = useState('system'); // 'light', 'dark', 'system'
+
+    useEffect(() => {
+        const root = window.document.documentElement;
+        const isDark =
+          theme === 'dark' ||
+          (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        root.classList.toggle('dark', isDark);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        const themes = ['light', 'dark', 'system'];
+        const currentIndex = themes.indexOf(theme);
+        const nextIndex = (currentIndex + 1) % themes.length;
+        setTheme(themes[nextIndex]);
+    };
 
     useEffect(() => {
         if (Object.keys(firebaseConfig).length > 0) {
@@ -1217,9 +1266,6 @@ function App() {
             const fetchedEvents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             setEvents(fetchedEvents);
 
-            // --- FIX ---
-            // Se l'evento attualmente selezionato non esiste più nella lista
-            // (perché è stato eliminato), torna alla dashboard.
             if (selectedEvent && !fetchedEvents.some(e => e.id === selectedEvent.id)) {
                 setSelectedEvent(null);
                 setCurrentView('dashboard');
@@ -1283,7 +1329,7 @@ function App() {
         try {
             const batch = writeBatch(db);
             
-            const collectionsToDelete = ['guests', 'tables', 'strictGroups'];
+            const collectionsToDelete = ['guests', 'staff', 'tables', 'strictGroups'];
             for (const coll of collectionsToDelete) {
                 const collRef = collection(eventRef, coll);
                 const snapshot = await getDocs(query(collRef));
@@ -1321,7 +1367,7 @@ function App() {
     }
 
     return (
-        <div className="flex h-screen bg-[#F5F0E6]">
+        <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
              {deletingEvent && <DeleteConfirmationModal title="Conferma Eliminazione Evento" message={`Sei sicuro di voler eliminare permanentemente l'evento <strong class="font-bold">${deletingEvent.name}</strong>?<br/><span class="font-bold text-red-500">Tutti gli invitati e i tavoli associati verranno cancellati. Questa azione è irreversibile.</span>`} onConfirm={handleDeleteEvent} onCancel={() => setDeletingEvent(null)} isDeleting={isDeleting} />}
             <div className="relative">
                 <Sidebar 
@@ -1333,11 +1379,12 @@ function App() {
                     onSelectEvent={handleSelectEvent} 
                     onNavigate={handleNavigate} 
                     selectedEventId={selectedEvent?.id} 
+                    onToggleTheme={toggleTheme}
                 />
                 <button 
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     title={isSidebarCollapsed ? "Espandi Sidebar" : "Collassa Sidebar"}
-                    className="absolute top-1/2 -translate-y-1/2 -right-4 z-40 bg-white p-2 rounded-full shadow-lg text-gray-600 hover:bg-gray-100 hover:scale-110 transition-all duration-200"
+                    className="absolute top-1/2 -translate-y-1/2 -right-4 z-40 bg-white dark:bg-gray-700 p-2 rounded-full shadow-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:scale-110 transition-all duration-200"
                 >
                     {isSidebarCollapsed ? <ExpandIcon className="h-5 w-5"/> : <CollapseIcon className="h-5 w-5"/>}
                 </button>
@@ -1346,10 +1393,10 @@ function App() {
                 <main className="flex-grow overflow-y-auto">
                     {renderContent()}
                 </main>
-                <footer className="w-full text-center p-4 text-xs text-gray-500 flex items-center justify-center bg-[#FDFBF7] border-t border-gray-200">
+                <footer className="w-full text-center p-4 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                     Made with <span className="text-red-500 mx-1">❤️</span> by 
                     <a href="https://www.iluminari3d.com" target="_blank" rel="noopener noreferrer" className="ml-1">
-                        <IluminariLogo className="h-4 fill-current text-gray-800" />
+                        <IluminariLogo className="h-4 fill-current text-gray-800 dark:text-gray-200" />
                     </a>
                 </footer>
             </div>
