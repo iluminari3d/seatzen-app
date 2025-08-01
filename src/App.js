@@ -45,6 +45,7 @@ function UserAvatarIcon({ className }) { return ( <svg className={className} fil
 function LogoutIcon({ className }) { return ( <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> ); };
 function SeatZenLogo({ className }) { return ( <svg id="Livello_2" data-name="Livello 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1169.07 1169.07" className={className}><g id="Livello_3" data-name="Livello 3"><g><path className="text-gray-800 dark:text-gray-200" fill="currentColor" d="M1123.12,357c-29.44-69.61-71.59-132.12-125.26-185.79-53.67-53.67-116.18-95.82-185.79-125.26C739.99,15.46,663.43,0,584.54,0h-2.77c-6.76,0-12.23,5.48-12.23,12.23v38.1c0,6.76,5.48,12.23,12.23,12.23h0c288.46,0,524.36,232.82,524.74,521.27.38,288.37-234.3,523.06-522.68,522.68-288.46-.38-521.27-236.29-521.27-524.74h0c0-6.76-5.48-12.23-12.23-12.23H15c-8.28,0-15,6.72-15,15h0c0,78.9,15.46,155.45,45.95,227.54,29.44,69.61,71.58,132.12,125.26,185.79,53.67,53.67,116.18,95.82,185.79,125.26,72.09,30.49,148.64,45.95,227.54,45.95s155.45-15.46,227.54-45.95c69.61-29.44,132.12-71.59,185.79-125.26,53.67-53.67,95.82-116.18,125.26-185.79,30.49-72.09,45.95-148.64,45.95-227.54s-15.46-155.45-45.95-227.54Z"/><circle className="sz-accent-fill" fill="currentColor" cx="584.54" cy="584.54" r="328.66"/><g><path className="sz-accent-fill" fill="currentColor" d="M584.64,235.81c22.48,0,44.63,2.14,66.32,6.34,3.4.66,6.69-1.54,7.41-4.93.97-4.57,1.95-9.14,2.92-13.71.74-3.49-1.52-6.91-5.03-7.59-23.18-4.5-47.12-6.86-71.62-6.87-24.49,0-48.42,2.34-71.6,6.82-3.51.68-5.78,4.1-5.03,7.59.97,4.57,1.95,9.14,2.92,13.71.72,3.38,4.01,5.59,7.41,4.93,21.69-4.18,43.83-6.3,66.29-6.3Z"/><path className="sz-accent-fill" fill="currentColor" d="M831.2,338.01c15.89,15.9,30.04,33.07,42.41,51.38,1.94,2.87,5.82,3.64,8.73,1.76,3.92-2.54,7.84-5.09,11.76-7.63,2.99-1.94,3.81-5.97,1.81-8.92-13.21-19.57-28.47-38.17-45.79-55.5-17.31-17.32-35.89-32.58-55.45-45.8-2.96-2-6.98-1.19-8.93,1.81-2.54,3.92-5.09,7.84-7.63,11.76-1.88,2.9-1.11,6.79,1.75,8.73,18.29,12.38,35.45,26.53,51.33,42.42Z"/><path className="sz-accent-fill" fill="currentColor" d="M933.28,584.62c0,22.48-2.14,44.63-6.34,66.32-.66,3.4,1.54,6.69,4.93,7.41,4.57.97,9.14,1.95,13.71,2.92,3.49.74,6.91-1.52,7.59-5.03,4.5-23.18,6.86-47.12,6.87-71.62s-2.34-48.42-6.82-71.6c-.68-3.51-4.1-5.78-7.59-5.03-4.57.97-9.14-1.95-13.71,2.92-3.38.72-5.59,4.01-4.93,7.41,4.18,21.69,6.3,43.83,6.3,66.29Z"/><path className="sz-accent-fill" fill="currentColor" d="M831.08,831.19c-15.9,15.89-33.07,30.04-51.38,42.41-2.87,1.94-3.64,5.82-1.76,8.73,2.54,3.92,5.09,7.84,7.63,11.76,1.94,2.99,5.97,3.81,8.92,1.81,19.57-13.21,38.17-28.47,55.5-45.79,17.32-17.31,32.58-35.89,45.8-55.45,2-2.96-1.19-6.98-1.81-8.93-3.92-2.54-7.84-5.09-11.76-7.63-2.9-1.88-6.79-1.11-8.73,1.75-12.38,18.29-26.53,35.45-42.42,51.33Z"/><path className="sz-accent-fill" fill="currentColor" d="M584.46,933.27c-22.48,0-44.63-2.14-66.32-6.34-3.4-.66-6.69,1.54-7.41,4.93-.97,4.57-1.95,9.14-2.92,13.71-.74,3.49,1.52,6.91,5.03,7.59,23.18,4.5,47.12,6.86,71.62,6.87,24.49,0,48.42-2.34,71.6-6.82,3.51-.68-5.78,4.1,5.03-7.59-.97-4.57-1.95,9.14-2.92-13.71-.72-3.38-4.01-5.59-7.41-4.93-21.69,4.18-43.83,6.3-66.29,6.3Z"/><path className="sz-accent-fill" fill="currentColor" d="M337.9,831.06c-15.89-15.9-30.04-33.07-42.41-51.38-1.94-2.87-5.82-3.64-8.73-1.76-3.92,2.54-7.84-5.09-11.76,7.63-2.99,1.94-3.81,5.97-1.81,8.92,13.21,19.57,28.47,38.17,45.79,55.5,17.31,17.32,35.89,32.58,55.45,45.8,2.96,2,6.98,1.19,8.93-1.81,2.54-3.92,5.09-7.84,7.63-11.76,1.88-2.9,1.11-6.79-1.75-8.73-18.29-12.38-35.45-26.53-51.33-42.42Z"/><path className="sz-accent-fill" fill="currentColor" d="M235.82,584.45c0-22.48,2.14-44.63,6.34-66.32.66-3.4-1.54-6.69-4.93-7.41-4.57-.97-9.14-1.95-13.71-2.92-3.49-.74-6.91,1.52-7.59,5.03-4.5,23.18-6.86,47.12-6.87,71.62s2.34,48.42,6.82,71.6c.68,3.51,4.1,5.78,7.59,5.03,4.57-.97,9.14-1.95,13.71-2.92,3.38-.72,5.59-4.01,4.93-7.41-4.18-21.69-6.3-43.83-6.3-66.29Z"/><path className="sz-accent-fill" fill="currentColor" d="M338.02,337.89c15.9-15.89,33.07-30.04,51.38-42.41,2.87-1.94,3.64-5.82,1.76-8.73-2.54-3.92-5.09-7.84-7.63-11.76-1.94-2.99-5.97-3.81-8.92-1.81-19.57,13.21-38.17-28.47-55.5,45.79-17.32,17.31-32.58,35.89-45.8,55.45-2,2.96-1.19-6.98,1.81,8.93,3.92,2.54,7.84-5.09,11.76,7.63,2.9,1.88,6.79,1.11,8.73-1.75,12.38-18.29,26.53-35.45,42.42-51.33Z"/></g></g></g></svg> ); };
 function MagicWandIcon({ className }) { return ( <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> ); };
+function ResetIcon({ className }) { return ( <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3h2m-4 17v-7"></path></svg> ); };
 function GroupIcon({ className }) { return ( <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> ); };
 function HomeIcon({ className }) { return ( <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> ); };
 function PlusIcon({ className }) { return ( <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> ); };
@@ -804,6 +805,8 @@ function EventView({ event, db, user, onDeleteEvent }) {
 	const [deletingTable, setDeletingTable] = useState(null);
     const [isDeletingTable, setIsDeletingTable] = useState(false);
 	const [showArrangeOptions, setShowArrangeOptions] = useState(false);
+	const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -855,8 +858,24 @@ function EventView({ event, db, user, onDeleteEvent }) {
 	const handleDeleteTable = async (tableId) => {
 		if (!db || !user || !event || !tableId) return;
 		setIsDeletingTable(true);
-		const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${tableId}`;
-		await deleteDoc(doc(db, path));
+		
+		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+		const tablePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${tableId}`;
+
+		const batch = writeBatch(db);
+		
+		// Unassign people from the deleted table
+		const peopleOnTable = people.filter(p => p.tableId === tableId);
+		peopleOnTable.forEach(p => {
+			batch.update(doc(db, peoplePath, p.id), { tableId: null });
+		});
+
+		// Delete the table
+		batch.delete(doc(db, tablePath));
+
+		await batch.commit();
+
 		setDeletingTable(null);
 		setIsDeletingTable(false);
 	}
@@ -869,15 +888,17 @@ function EventView({ event, db, user, onDeleteEvent }) {
 	
 	const handleAutoArrange = async (options) => {
 		setIsArranging(true);
-		const peopleToArrange = people.filter(p => !p.tableId || !tables.find(t => t.id === p.tableId)?.locked);
-		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
 		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
 		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
+		
 		const batch = writeBatch(db);
 
 		// 1. Unassign all people from unlocked tables
-		peopleToArrange.forEach(p => {
-			batch.update(doc(db, peoplePath, p.id), { tableId: null });
+		people.forEach(p => {
+			if (p.tableId && !tables.find(t => t.id === p.tableId)?.locked) {
+				batch.update(doc(db, peoplePath, p.id), { tableId: null });
+			}
 		});
 
 		// 2. Delete all unlocked tables
@@ -885,22 +906,26 @@ function EventView({ event, db, user, onDeleteEvent }) {
 			batch.delete(doc(db, tablesPath, t.id));
 		});
 
-		let remainingPeople = [...peopleToArrange];
+		await batch.commit(); // Commit the reset first
+
+		// --- Start new arrangement ---
+		const newBatch = writeBatch(db);
+		let remainingPeople = people.filter(p => !p.tableId || !tables.find(t => t.id === p.tableId)?.locked);
 		
 		// 3. Create special tables
 		if (options.allowDifferentTables && options.differentTables.length > 0) {
-			options.differentTables.forEach(specialTable => {
+			for (const specialTable of options.differentTables) {
 				const groupIds = specialTable.categories;
 				const tableGuests = remainingPeople.filter(p => groupIds.includes(p.strictGroupId));
 				remainingPeople = remainingPeople.filter(p => !groupIds.includes(p.strictGroupId));
 				
 				const newTableRef = doc(collection(db, tablesPath));
 				const tableName = specialTable.categories.map(c => strictGroups.find(g => g.id === c)?.name).join(', ');
-				batch.set(newTableRef, { name: tableName, capacity: specialTable.capacity, shape: 'round', section: activeSection, createdAt: serverTimestamp(), locked: false });
+				newBatch.set(newTableRef, { name: tableName, capacity: specialTable.capacity, shape: 'round', section: activeSection, createdAt: serverTimestamp(), locked: false });
 				tableGuests.forEach(guest => {
-					batch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
+					newBatch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
 				});
-			});
+			}
 		}
 
 		// 4. Create couple's table
@@ -912,9 +937,9 @@ function EventView({ event, db, user, onDeleteEvent }) {
 				
 				if(couple.length > 0){
 					const newTableRef = doc(collection(db, tablesPath));
-					batch.set(newTableRef, { name: 'Tavolo Sposi', capacity: 2, shape: options.tableType, section: activeSection, createdAt: serverTimestamp(), locked: false });
+					newBatch.set(newTableRef, { name: 'Tavolo Sposi', capacity: 2, shape: options.tableType, section: activeSection, createdAt: serverTimestamp(), locked: false });
 					couple.forEach(person => {
-						batch.update(doc(db, peoplePath, person.id), { tableId: newTableRef.id });
+						newBatch.update(doc(db, peoplePath, person.id), { tableId: newTableRef.id });
 					});
 				}
 			}
@@ -922,18 +947,36 @@ function EventView({ event, db, user, onDeleteEvent }) {
 
 		// 5. Create remaining tables
 		const numTables = Math.ceil(remainingPeople.length / options.capacity);
-		for (let i = 0; i < numTables; i++) {
+		let tableCounter = 1;
+		while (remainingPeople.length > 0) {
 			const newTableRef = doc(collection(db, tablesPath));
-			batch.set(newTableRef, { name: `Tavolo ${i + 1}`, capacity: options.capacity, shape: options.tableType, section: activeSection, createdAt: serverTimestamp(), locked: false });
+			newBatch.set(newTableRef, { name: `Tavolo ${tableCounter++}`, capacity: options.capacity, shape: options.tableType, section: activeSection, createdAt: serverTimestamp(), locked: false });
 			const tableGuests = remainingPeople.splice(0, options.capacity);
 			tableGuests.forEach(guest => {
-				batch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
+				newBatch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
 			});
 		}
 
-		await batch.commit();
+		await newBatch.commit();
 		setIsArranging(false);
 		setShowArrangeOptions(false);
+	}
+
+	const handleResetLayout = async () => {
+		setIsResetting(true);
+		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+		
+		const batch = writeBatch(db);
+		people.forEach(p => {
+			if (p.tableId && !tables.find(t => t.id === p.tableId)?.locked) {
+				batch.update(doc(db, peoplePath, p.id), { tableId: null });
+			}
+		});
+
+		await batch.commit();
+		setIsResetting(false);
+		setShowResetConfirm(false);
 	}
 	
 	const handleEditPerson = (person) => {
@@ -976,7 +1019,8 @@ function EventView({ event, db, user, onDeleteEvent }) {
 
     return (
         <>
-            {deletingTable && <DeleteConfirmationModal title="Conferma Eliminazione Tavolo" message={`Sei sicuro di voler eliminare permanentemente il tavolo <strong class="font-bold">${deletingTable.name}</strong>?`} onConfirm={() => handleDeleteTable(deletingTable.id)} onCancel={() => setDeletingTable(null)} isDeleting={isDeletingTable} />}
+            {deletingTable && <DeleteConfirmationModal title="Conferma Eliminazione Tavolo" message={`Sei sicuro di voler eliminare permanentemente il tavolo <strong class="font-bold">${deletingTable.name}</strong>? Gli invitati verranno spostati tra i non assegnati.`} onConfirm={() => handleDeleteTable(deletingTable.id)} onCancel={() => setDeletingTable(null)} isDeleting={isDeletingTable} />}
+			{showResetConfirm && <DeleteConfirmationModal title="Resetta Disposizione" message={`Sei sicuro di voler resettare la disposizione? Tutti gli invitati verranno rimossi dai tavoli <strong class="font-bold">non bloccati</strong>.`} onConfirm={handleResetLayout} onCancel={() => setShowResetConfirm(false)} isDeleting={isResetting} confirmText="Sì, resetta"/>}
 			{showArrangeOptions && <ArrangeOptionsModal onClose={() => setShowArrangeOptions(false)} onArrange={handleAutoArrange} isArranging={isArranging} guestGroups={strictGroups} />}
 			{(editingPerson || isCreatingPerson) && <GuestDetailModal guest={editingPerson} allGuests={people} strictGroups={strictGroups} onSave={handleSavePerson} onClose={() => { setEditingPerson(null); setIsCreatingPerson(false); }} isSaving={isSavingPerson} isCreating={isCreatingPerson} onManageGroups={() => setIsManagingGroups(true)} />}
             {isManagingGroups && <StrictGroupModal groups={strictGroups} onAdd={handleAddStrictGroup} onDelete={handleDeleteStrictGroup} onClose={() => setIsManagingGroups(false)} isSaving={isSavingGroup} />}
@@ -988,6 +1032,10 @@ function EventView({ event, db, user, onDeleteEvent }) {
 						<button onClick={() => setShowArrangeOptions(true)} className="flex items-center bg-blue-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-blue-600 transition-colors">
 							<MagicWandIcon className="h-4 w-4 mr-2" />
 							Disponi Automaticamente
+						</button>
+						<button onClick={() => setShowResetConfirm(true)} className="flex items-center bg-yellow-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-yellow-600 transition-colors">
+							<ResetIcon className="h-4 w-4 mr-2" />
+							Resetta Disposizione
 						</button>
 						<button onClick={() => onDeleteEvent(event)} className="flex items-center bg-red-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-red-600 transition-colors">
 							<TrashIcon className="h-4 w-4 mr-2" />
