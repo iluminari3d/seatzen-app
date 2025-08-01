@@ -868,7 +868,71 @@ function EventView({ event, db, user, onDeleteEvent }) {
 	}
 	
 	const handleAutoArrange = async (options) => {
-		alert("La logica di disposizione automatica sarà implementata nel prossimo step!");
+		setIsArranging(true);
+		const peopleToArrange = people.filter(p => !p.tableId || !tables.find(t => t.id === p.tableId)?.locked);
+		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
+		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+		const batch = writeBatch(db);
+
+		// 1. Unassign all people from unlocked tables
+		peopleToArrange.forEach(p => {
+			batch.update(doc(db, peoplePath, p.id), { tableId: null });
+		});
+
+		// 2. Delete all unlocked tables
+		tables.filter(t => !t.locked).forEach(t => {
+			batch.delete(doc(db, tablesPath, t.id));
+		});
+
+		let remainingPeople = [...peopleToArrange];
+		
+		// 3. Create special tables
+		if (options.allowDifferentTables && options.differentTables.length > 0) {
+			options.differentTables.forEach(specialTable => {
+				const groupIds = specialTable.categories;
+				const tableGuests = remainingPeople.filter(p => groupIds.includes(p.strictGroupId));
+				remainingPeople = remainingPeople.filter(p => !groupIds.includes(p.strictGroupId));
+				
+				const newTableRef = doc(collection(db, tablesPath));
+				const tableName = specialTable.categories.map(c => strictGroups.find(g => g.id === c)?.name).join(', ');
+				batch.set(newTableRef, { name: tableName, capacity: specialTable.capacity, shape: 'round', section: activeSection, createdAt: serverTimestamp(), locked: false });
+				tableGuests.forEach(guest => {
+					batch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
+				});
+			});
+		}
+
+		// 4. Create couple's table
+		if (!options.noCoupleTable) {
+			const coupleGroupId = strictGroups.find(g => g.name === 'Sposi')?.id;
+			if(coupleGroupId){
+				const couple = remainingPeople.filter(p => p.strictGroupId === coupleGroupId);
+				remainingPeople = remainingPeople.filter(p => p.strictGroupId !== coupleGroupId);
+				
+				if(couple.length > 0){
+					const newTableRef = doc(collection(db, tablesPath));
+					batch.set(newTableRef, { name: 'Tavolo Sposi', capacity: 2, shape: options.tableType, section: activeSection, createdAt: serverTimestamp(), locked: false });
+					couple.forEach(person => {
+						batch.update(doc(db, peoplePath, person.id), { tableId: newTableRef.id });
+					});
+				}
+			}
+		}
+
+		// 5. Create remaining tables
+		const numTables = Math.ceil(remainingPeople.length / options.capacity);
+		for (let i = 0; i < numTables; i++) {
+			const newTableRef = doc(collection(db, tablesPath));
+			batch.set(newTableRef, { name: `Tavolo ${i + 1}`, capacity: options.capacity, shape: options.tableType, section: activeSection, createdAt: serverTimestamp(), locked: false });
+			const tableGuests = remainingPeople.splice(0, options.capacity);
+			tableGuests.forEach(guest => {
+				batch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
+			});
+		}
+
+		await batch.commit();
+		setIsArranging(false);
 		setShowArrangeOptions(false);
 	}
 	
