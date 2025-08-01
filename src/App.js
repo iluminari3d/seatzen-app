@@ -868,7 +868,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
 	}
 	
 	const handleAutoArrange = async (options) => {
-        alert("La logica di disposizione automatica sarà implementata nel prossimo step!");
+		alert("La logica di disposizione automatica sarà implementata nel prossimo step!");
 		setShowArrangeOptions(false);
 	}
 	
