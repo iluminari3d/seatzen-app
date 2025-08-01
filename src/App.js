@@ -460,7 +460,7 @@ function TableCard({ table, people, onDragStart, onDragOver, onDrop, isDragOver,
                 <button onClick={() => onEditTable(table)} title="Modifica tavolo" className="p-1 text-gray-400 hover:text-green-500">
                     <EditIcon className="h-5 w-5" />
                 </button>
-                <button onClick={() => onDeleteTable(table)} title="Elimina tavolo" className="p-1 text-gray-400 hover:text-red-500">
+                <button onClick={() => onDeleteTable(table.id)} title="Elimina tavolo" className="p-1 text-gray-400 hover:text-red-500">
                     <TrashIcon className="h-5 w-5" />
                 </button>
             </div>
@@ -667,6 +667,8 @@ function EventView({ event, db, user, onDeleteEvent }) {
     const [isArranging, setIsArranging] = useState(false);
     const addMenuRef = useRef(null);
     const [viewMode, setViewMode] = useState('list');
+	const [deletingTable, setDeletingTable] = useState(null);
+    const [isDeletingTable, setIsDeletingTable] = useState(false);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -715,19 +717,39 @@ function EventView({ event, db, user, onDeleteEvent }) {
         await addDoc(collection(db, path), { name: tableName, capacity: tableCapacity, shape: tableShape, section: activeSection, createdAt: serverTimestamp(), locked: false });
     };
     
+	const handleDeleteTable = async (tableId) => {
+		if (!db || !user || !event || !tableId) return;
+		setIsDeletingTable(true);
+		const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${tableId}`;
+		await deleteDoc(doc(db, path));
+		setDeletingTable(null);
+		setIsDeletingTable(false);
+	}
+	
+	const handleToggleLock = async (tableId, locked) => {
+		if (!db || !user || !event || !tableId) return;
+		const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${tableId}`;
+		await updateDoc(doc(db, path), { locked });
+	}
+	
     const unassignedPeople = people.filter(p => !p.tableId);
 
     return (
         <>
-            {/* Modals */}
+            {deletingTable && <DeleteConfirmationModal title="Conferma Eliminazione Tavolo" message={`Sei sicuro di voler eliminare permanentemente il tavolo <strong class="font-bold">${deletingTable.name}</strong>?`} onConfirm={() => handleDeleteTable(deletingTable.id)} onCancel={() => setDeletingTable(null)} isDeleting={isDeletingTable} />}
             <div className="w-full h-full p-4 md:p-8 text-left animate-fade-in dark:bg-gray-900" onDragLeave={() => {}}>
                 {/* Header */}
                 <div className="flex justify-between items-start mb-8">
                     <h1 style={{ fontFamily: 'Lora, serif' }} className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">{event.name}</h1>
-                    <button onClick={() => onDeleteEvent(event)} className="flex items-center bg-red-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-red-600 transition-colors">
-                        <TrashIcon className="h-4 w-4 mr-2" />
-                        Elimina Evento
-                    </button>
+					<div className="flex items-center space-x-2">
+						<button onClick={() => { alert("La logica di disposizione automatica sarà implementata nel prossimo step!"); }} className="flex items-center bg-blue-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-blue-600 transition-colors">
+							Disponi Automaticamente
+						</button>
+						<button onClick={() => onDeleteEvent(event)} className="flex items-center bg-red-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-red-600 transition-colors">
+							<TrashIcon className="h-4 w-4 mr-2" />
+							Elimina Evento
+						</button>
+					</div>
                 </div>
 
                 {/* Section Toggler */}
@@ -767,9 +789,12 @@ function EventView({ event, db, user, onDeleteEvent }) {
                             onDrop={() => {}}
                             dragOverId={dragOverId}
                             onEditPerson={() => {}}
-                            onEditTable={() => {}}
-                            onDeleteTable={() => {}}
-                            onToggleLock={() => {}}
+                            onEditTable={(table) => alert("La modifica del tavolo sarà implementata nel prossimo step!")}
+                            onDeleteTable={(tableId) => {
+                                const table = tables.find(t => t.id === tableId);
+                                setDeletingTable(table);
+                            }}
+                            onToggleLock={handleToggleLock}
                             activeSection={activeSection}
                         />
                     </div>
