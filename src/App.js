@@ -946,7 +946,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		}
 
 		// 5. Create remaining tables
-		const numTables = Math.ceil(remainingPeople.length / options.capacity);
 		let tableCounter = 1;
 		while (remainingPeople.length > 0) {
 			const newTableRef = doc(collection(db, tablesPath));
