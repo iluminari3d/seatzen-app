@@ -3,8 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, doc, updateDoc, writeBatch, where, getDocs, deleteDoc, orderBy } from 'firebase/firestore';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import seatzenLogo from './logos/seatzen-logo.png'; // IMPORTANTE: Importiamo il logo direttamente
+import 'jspdf-autotable';
 
 
 // --- Author: I Luminari SRLS - www.iluminari3d.com ---
@@ -1032,12 +1031,558 @@ function LoginPage({ onLogin, onEmailLogin, onEmailRegister }) {
     );
 };
 
-// ... tutti gli altri componenti (Sidebar, App, etc.) sono identici.
-// Ho omesso il codice ripetuto per focalizzarci sulla soluzione,
-// ma nel tuo file devi ovviamente mantenere tutto il resto del codice.
+function EventView({ event, db, user, onDeleteEvent }) {
+    // Hooks MUST be called at the top level, before any conditional returns.
+    const [activeSection, setActiveSection] = useState('guests');
+    const [people, setPeople] = useState([]);
+    const [isLoadingPeople, setIsLoadingPeople] = useState(true);
+    const [tables, setTables] = useState([]);
+    const [isLoadingTables, setIsLoadingTables] = useState(true);
+    const [strictGroups, setStrictGroups] = useState([]);
+    const [editingPerson, setEditingPerson] = useState(null);
+    const [deletingPerson, setDeletingPerson] = useState(null);
+    const [isDeletingPerson, setIsDeletingPerson] = useState(false);
+    const [editingTable, setEditingTable] = useState(null);
+    const [isSavingTable, setIsSavingTable] = useState(false);
+    const [isCreatingPerson, setIsCreatingPerson] = useState(false);
+    const [isSavingPerson, setIsSavingPerson] = useState(false);
+    const [isManagingGroups, setIsManagingGroups] = useState(false);
+    const [isSavingGroup, setIsSavingGroup] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const [isSavingImport, setIsSavingImport] = useState(false);
+    const [isArranging, setIsArranging] = useState(false);
+    const [viewMode, setViewMode] = useState('list');
+	const [deletingTable, setDeletingTable] = useState(null);
+    const [isDeletingTable, setIsDeletingTable] = useState(false);
+	const [showArrangeOptions, setShowArrangeOptions] = useState(false);
+	const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
+    const [showExportMenu, setShowExportMenu] = useState(false);
+    const exportMenuRef = useRef(null);
+    const [showClearListConfirm, setShowClearListConfirm] = useState(false);
+    const [isClearingList, setIsClearingList] = useState(false);
+    const [isAddingFamily, setIsAddingFamily] = useState(false);
 
-// Per completezza, includo di nuovo il componente App e Sidebar
-// con le chiamate corrette
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+                setShowExportMenu(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [exportMenuRef]);
+
+    useEffect(() => {
+        if (!db || !user || !event) {
+            setPeople([]);
+            setTables([]);
+            setStrictGroups([]);
+            return;
+        };
+
+        const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+        const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+        const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
+        const groupsPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/strictGroups`;
+
+        setIsLoadingPeople(true);
+        setIsLoadingTables(true);
+
+        const unsubPeople = onSnapshot(query(collection(db, peoplePath), orderBy("name")), snap => {
+            setPeople(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            setIsLoadingPeople(false);
+        }, err => { console.error(err); setIsLoadingPeople(false); });
+
+        const qTables = query(collection(db, tablesPath), where("section", "==", activeSection), orderBy("createdAt"));
+        const unsubTables = onSnapshot(qTables, snap => {
+            setTables(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            setIsLoadingTables(false);
+        }, err => { console.error(err); setIsLoadingTables(false); });
+
+        const unsubGroups = activeSection === 'guests'
+            ? onSnapshot(query(collection(db, groupsPath), orderBy("name")), snap => { setStrictGroups(snap.docs.map(d => ({ id: d.id, ...d.data() }))); }, err => console.error(err))
+            : () => { setStrictGroups([]); return () => {}; };
+
+        return () => { unsubPeople(); unsubTables(); unsubGroups(); };
+    }, [db, user, event, activeSection]);
+
+    // This guard clause now comes AFTER all hooks have been called.
+    if (!event) {
+        return (
+            <div className="flex justify-center items-center w-full h-full p-8 dark:bg-gray-900">
+                <p className="text-gray-600 dark:text-gray-300">Caricamento evento in corso...</p>
+            </div>
+        );
+    }
+
+    const handleExportPdf = (type) => {
+        try {
+            const doc = new jsPDF();
+            
+            // Per un supporto completo dei caratteri speciali, sarebbe necessario incorporare un font .ttf
+            // Esempio: doc.setFont('MyCustomFont');
+
+            const title = `${event.name} - ${new Date(event.date).toLocaleDateString('it-IT')}`;
+            doc.text(title, 14, 15);
+            
+            const tableOptions = {
+                startY: 25,
+                styles: {
+                    font: 'helvetica',
+                    cellPadding: 2,
+                },
+                headStyles: {
+                    fillColor: [41, 128, 185],
+                    textColor: 255,
+                    fontStyle: 'bold',
+                },
+            };
+
+            if (type === 'guests') {
+                doc.text(`Lista ${activeSection === 'guests' ? 'Invitati' : 'Staff'}`, 14, 22);
+                const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
+                const body = people.map(p => {
+                    const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
+                    const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
+                    return [p.name, groupName, tableName];
+                });
+
+                doc.autoTable({ ...tableOptions, head, body });
+                doc.save(`lista_${activeSection}_${event.name}.pdf`);
+
+            } else if (type === 'tables') {
+                doc.text('Disposizione Tavoli', 14, 22);
+                const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
+                const body = tables.map(t => {
+                    const assigned = people.filter(p => p.tableId === t.id);
+                    const assignedNames = assigned.map(p => p.name).join('\n');
+                    return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
+                });
+                
+                doc.autoTable({ ...tableOptions, head, body });
+                doc.save(`disposizione_tavoli_${event.name}.pdf`);
+            }
+
+        } catch (error) {
+            console.error("Errore durante la generazione del PDF:", error);
+            alert("Si è verificato un errore durante la creazione del PDF. Controlla la console per maggiori dettagli.");
+        } finally {
+            setShowExportMenu(false);
+        }
+    };
+
+
+    const handleAddTable = async (tableName, tableCapacity, tableShape) => {
+        if (!db || !user || !event) return;
+        const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
+        await addDoc(collection(db, path), { name: tableName, capacity: tableCapacity, shape: tableShape, section: activeSection, createdAt: serverTimestamp(), locked: false });
+    };
+
+    const handleUpdateTable = async (tableId, tableData) => {
+        if (!db || !user || !event) return;
+        setIsSavingTable(true);
+        const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${tableId}`;
+        try {
+            await updateDoc(doc(db, path), tableData);
+        } catch (error) {
+            console.error("Errore durante l'aggiornamento del tavolo:", error);
+            alert("Si è verificato un errore durante il salvataggio.");
+        } finally {
+            setIsSavingTable(false);
+            setEditingTable(null);
+        }
+    };
+    
+	const handleDeleteTable = async (table) => {
+		if (!db || !user || !event || !table) return;
+		setIsDeletingTable(true);
+		
+		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+		const tablePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${table.id}`;
+
+		const batch = writeBatch(db);
+		
+		const peopleOnTable = people.filter(p => p.tableId === table.id);
+		peopleOnTable.forEach(p => {
+			batch.update(doc(db, peoplePath, p.id), { tableId: null });
+		});
+
+		batch.delete(doc(db, tablePath));
+
+		await batch.commit();
+
+		setDeletingTable(null);
+		setIsDeletingTable(false);
+	}
+	
+	const handleToggleLock = async (tableId, locked) => {
+		if (!db || !user || !event || !tableId) return;
+		const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${tableId}`;
+		await updateDoc(doc(db, path), { locked });
+	}
+	
+	const handleAutoArrange = async (options) => {
+		setIsArranging(true);
+		const peopleCollection = 'guests';
+		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
+		
+		// 1. Clear existing unlocked tables and assignments
+		const clearBatch = writeBatch(db);
+		people.forEach(p => {
+			const table = tables.find(t => t.id === p.tableId);
+			if (p.tableId && (!table || !table.locked)) {
+				clearBatch.update(doc(db, peoplePath, p.id), { tableId: null });
+			}
+		});
+		tables.filter(t => !t.locked).forEach(t => {
+			clearBatch.delete(doc(db, tablesPath, t.id));
+		});
+		await clearBatch.commit();
+		
+		const arrangementBatch = writeBatch(db);
+		const lockedTableIds = tables.filter(t => t.locked).map(t => t.id);
+		let remainingPeople = [...people.filter(p => !lockedTableIds.includes(p.tableId))];
+		let seatedPersonIds = new Set();
+	
+		// Helper to seat a group of people
+		const seatGroup = (peopleToSeat, baseTableName, capacity, shape) => {
+			let tableCounter = 1;
+			while (peopleToSeat.length > 0) {
+				const newTableRef = doc(collection(db, tablesPath));
+				const tableName = `${baseTableName} ${peopleToSeat.length > capacity ? tableCounter++ : ''}`.trim();
+				arrangementBatch.set(newTableRef, { name: tableName, capacity, shape, section: activeSection, createdAt: serverTimestamp(), locked: false });
+				const tableGuests = peopleToSeat.splice(0, capacity);
+				tableGuests.forEach(guest => {
+					arrangementBatch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
+					seatedPersonIds.add(guest.id);
+				});
+			}
+		};
+	
+		// 2. Handle Couple's Table
+		if (!options.noCoupleTable) {
+			const coupleGroupId = strictGroups.find(g => g.name.toLowerCase() === 'sposi')?.id;
+			if (coupleGroupId) {
+				const couple = remainingPeople.filter(p => p.strictGroupId === coupleGroupId);
+				if (couple.length > 0) {
+					seatGroup(couple, 'Tavolo Sposi', couple.length > options.capacity ? couple.length : options.capacity, options.tableType);
+				}
+			}
+		}
+		remainingPeople = remainingPeople.filter(p => !seatedPersonIds.has(p.id));
+	
+		// 3. Handle Kids' Table
+		if (options.createKidsTable) {
+			const kids = remainingPeople.filter(p => YOUNG_CHILD_RANGES.includes(p.age));
+			if (kids.length > 0) {
+				seatGroup(kids, 'Tavolo Bambini', options.capacity, options.tableType);
+			}
+		}
+		remainingPeople = remainingPeople.filter(p => !seatedPersonIds.has(p.id));
+
+		// 4. Handle Special Tables
+		if (options.allowSpecialTables && options.specialTables.length > 0) {
+			for (const specialTableRule of options.specialTables) {
+				const groupIds = specialTableRule.groupIds;
+				const tableGuests = remainingPeople.filter(p => groupIds.includes(p.strictGroupId));
+				if (tableGuests.length > 0) {
+					const groupNames = specialTableRule.groupIds.map(id => strictGroups.find(g => g.id === id)?.name || '').join(' & ');
+					seatGroup(tableGuests, `Tavolo ${groupNames}`, specialTableRule.capacity, options.tableType);
+				}
+			}
+		}
+		remainingPeople = remainingPeople.filter(p => !seatedPersonIds.has(p.id));
+
+		// 5. Handle remaining guests
+		seatGroup(remainingPeople, 'Tavolo', options.capacity, options.tableType);
+	
+		await arrangementBatch.commit();
+		setIsArranging(false);
+		setShowArrangeOptions(false);
+	}
+
+	const handleResetLayout = async () => {
+		setIsResetting(true);
+		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
+		
+		const batch = writeBatch(db);
+
+		people.forEach(p => {
+			const table = tables.find(t => t.id === p.tableId);
+			if (p.tableId && (!table || !table.locked)) {
+				batch.update(doc(db, peoplePath, p.id), { tableId: null });
+			}
+		});
+		
+		tables.filter(t => !t.locked).forEach(t => {
+			batch.delete(doc(db, tablesPath, t.id));
+		});
+
+		await batch.commit();
+		setIsResetting(false);
+		setShowResetConfirm(false);
+	}
+
+    const handleClearList = async () => {
+        setIsClearingList(true);
+        const collectionName = activeSection === 'guests' ? 'guests' : 'staff';
+        const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${collectionName}`;
+        
+        try {
+            const q = query(collection(db, path));
+            const snapshot = await getDocs(q);
+            const batch = writeBatch(db);
+            snapshot.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        } catch (error) {
+            console.error("Errore durante la pulizia della lista:", error);
+            alert("Si è verificato un errore.");
+        } finally {
+            setIsClearingList(false);
+            setShowClearListConfirm(false);
+        }
+    };
+	
+	const handleEditPerson = (person) => {
+		setEditingPerson(person);
+		setIsCreatingPerson(false);
+	}
+
+	const handleSavePerson = async (personId, personData, personType) => {
+        if (!db || !user || !event) return;
+        setIsSavingPerson(true);
+        const collectionName = personType === 'staff' ? 'staff' : 'guests';
+		const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${collectionName}`;
+		
+		try {
+            if (personId) {
+                const originalCollectionName = personData.role ? 'staff' : 'guests';
+                const originalPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${originalCollectionName}`;
+                await updateDoc(doc(db, originalPath, personId), personData);
+            } else {
+                await addDoc(collection(db, path), { ...personData, createdAt: serverTimestamp() });
+            }
+        } catch (error) {
+            console.error("Errore salvataggio persona:", error);
+            alert("Si è verificato un errore.");
+        } finally {
+            setIsSavingPerson(false);
+            setEditingPerson(null);
+            setIsCreatingPerson(false);
+        }
+	}
+
+    const handleDeletePerson = async () => {
+        if (!deletingPerson || !db || !user || !event) return;
+        setIsDeletingPerson(true);
+        
+        const collectionName = deletingPerson.role ? 'staff' : 'guests';
+        const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${collectionName}/${deletingPerson.id}`;
+
+        try {
+            await deleteDoc(doc(db, path));
+        } catch (error) {
+            console.error("Errore durante l'eliminazione della persona:", error);
+            alert("Si è verificato un errore durante l'eliminazione.");
+        } finally {
+            setIsDeletingPerson(false);
+            setDeletingPerson(null);
+            setEditingPerson(null);
+        }
+    }
+
+    const handleAddStrictGroup = async (groupName) => {
+        if (!db || !user || !event) return;
+        setIsSavingGroup(true);
+        const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/strictGroups`;
+        await addDoc(collection(db, path), { name: groupName, createdAt: serverTimestamp() });
+        setIsSavingGroup(false);
+    }
+
+    const handleDeleteStrictGroup = async (groupId) => {
+        if (!db || !user || !event || !groupId) return;
+        const path = `artifacts/${appId}/users/${user.uid}/events/${event.id}/strictGroups/${groupId}`;
+        await deleteDoc(doc(db, path));
+    }
+	
+    const handleImportSave = async (peopleToImport) => {
+        if (!db || !user || !event) return;
+        setIsSavingImport(true);
+
+        const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+        const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+        const groupsPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/strictGroups`;
+        
+        try {
+            // Step 1: Identify and create any new groups.
+            const groupNamesInCsv = [...new Set(peopleToImport.map(p => p.groupName).filter(Boolean))];
+            
+            const existingGroupsQuery = query(collection(db, groupsPath), where('name', 'in', groupNamesInCsv.length > 0 ? groupNamesInCsv : [' ']));
+            const existingGroupsSnapshot = await getDocs(existingGroupsQuery);
+            const existingGroupNames = existingGroupsSnapshot.docs.map(d => d.data().name);
+
+            const groupsToCreate = groupNamesInCsv.filter(name => !existingGroupNames.includes(name));
+
+            if (groupsToCreate.length > 0) {
+                const groupsBatch = writeBatch(db);
+                groupsToCreate.forEach(name => {
+                    const newGroupRef = doc(collection(db, groupsPath));
+                    groupsBatch.set(newGroupRef, { name, createdAt: serverTimestamp() });
+                });
+                await groupsBatch.commit();
+            }
+
+            // Step 2: Get a complete, up-to-date map of all relevant groups by name.
+            const allGroupsSnapshot = await getDocs(collection(db, groupsPath));
+            const allGroupsMap = new Map(allGroupsSnapshot.docs.map(d => [d.data().name, d.id]));
+
+            // Step 3: Create the people with the correct strictGroupId.
+            const peopleBatch = writeBatch(db);
+            peopleToImport.forEach(person => {
+                const newPersonRef = doc(collection(db, peoplePath));
+                let personData;
+
+                if (person.type === 'guest') {
+                    const groupId = allGroupsMap.get(person.groupName) || '';
+                    personData = {
+                        name: person.name,
+                        age: person.age,
+                        strictGroupId: groupId,
+                        likes: [], dislikes: [], mustSitWith: [], tableId: null, createdAt: serverTimestamp(),
+                    };
+                } else { // Staff
+                    personData = {
+                        name: person.name,
+                        role: person.role,
+                        tableId: null, createdAt: serverTimestamp(),
+                    };
+                }
+                peopleBatch.set(newPersonRef, personData);
+            });
+
+            await peopleBatch.commit();
+
+        } catch (error) {
+            console.error("Error importing people:", error);
+            alert("An error occurred during the import.");
+        } finally {
+            setIsSavingImport(false);
+            setIsImporting(false); 
+        }
+    };
+
+
+    const unassignedPeople = people.filter(p => !p.tableId);
+
+    return (
+        <div className="relative w-full h-full">
+            {deletingTable && <DeleteConfirmationModal title="Conferma Eliminazione Tavolo" message={`Sei sicuro di voler eliminare permanentemente il tavolo <strong class="font-bold">${deletingTable.name}</strong>? Gli invitati verranno spostati tra i non assegnati.`} onConfirm={() => handleDeleteTable(deletingTable)} onCancel={() => setDeletingTable(null)} isDeleting={isDeletingTable} />}
+			{deletingPerson && <DeleteConfirmationModal title="Conferma Eliminazione Persona" message={`Sei sicuro di voler eliminare permanentemente <strong class="font-bold">${deletingPerson.name}</strong> dalla lista?`} onConfirm={handleDeletePerson} onCancel={() => setDeletingPerson(null)} isDeleting={isDeletingPerson} />}
+            {showResetConfirm && <DeleteConfirmationModal title="Resetta Disposizione" message={`Sei sicuro di voler resettare la disposizione? Tutti gli invitati verranno rimossi dai tavoli <strong class="font-bold">non bloccati</strong>.`} onConfirm={handleResetLayout} onCancel={() => setShowResetConfirm(false)} isDeleting={isResetting} confirmText="Sì, resetta"/>}
+			{showArrangeOptions && <ArrangeOptionsModal onClose={() => setShowArrangeOptions(false)} onArrange={handleAutoArrange} isArranging={isArranging} guestGroups={strictGroups} />}
+            {editingTable && <EditTableModal table={editingTable} onClose={() => setEditingTable(null)} onSave={handleUpdateTable} isSaving={isSavingTable} />}
+            {(editingPerson || isCreatingPerson) && <PersonDetailModal person={editingPerson} allGuests={people} strictGroups={strictGroups} onSave={handleSavePerson} onClose={() => { setEditingPerson(null); setIsCreatingPerson(false); }} isSaving={isSavingPerson} isCreating={isCreatingPerson} onManageGroups={() => setIsManagingGroups(true)} onDelete={setDeletingPerson} initialType={activeSection === 'staff' ? 'staff' : 'guest'} />}
+            {isManagingGroups && <StrictGroupModal groups={strictGroups} onAdd={handleAddStrictGroup} onDelete={handleDeleteStrictGroup} onClose={() => setIsManagingGroups(false)} isSaving={isSavingGroup} />}
+            {isImporting && <ImportPeopleModal existingGroups={strictGroups} onClose={() => setIsImporting(false)} onSave={handleImportSave} isSaving={isSavingImport} activeSection={activeSection} />}
+            {showClearListConfirm && <DeleteConfirmationModal title="Svuota Lista" message={`Sei sicuro di voler eliminare <strong class="font-bold">tutti</strong> gli ${activeSection === 'guests' ? 'invitati' : 'staff'} da questo evento? L'azione è irreversibile.`} onConfirm={handleClearList} onCancel={() => setShowClearListConfirm(false)} isDeleting={isClearingList} confirmText="Sì, svuota"/>}
+            {isAddingFamily && <AddFamilyModal onClose={() => setIsAddingFamily(false)} onSave={() => {}} isSaving={false} />}
+
+
+            <div className="w-full h-full p-4 md:p-8 text-left animate-fade-in dark:bg-gray-900">
+                <div className="flex justify-between items-start mb-8">
+                    <h1 style={{ fontFamily: 'Lora, serif' }} className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">{event.name}</h1>
+					<div className="flex items-center space-x-2">
+                        <div className="relative" ref={exportMenuRef}>
+                            <button onClick={() => setShowExportMenu(!showExportMenu)} className="flex items-center bg-green-600 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-green-700 transition-colors">
+                                <ExportIcon className="h-4 w-4 mr-2" />
+                                Esporta PDF
+                            </button>
+                            {showExportMenu && (
+                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-20">
+                                    <a href="#" onClick={(e) => {e.preventDefault(); handleExportPdf('guests')}} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">Lista Invitati/Staff</a>
+                                    <a href="#" onClick={(e) => {e.preventDefault(); handleExportPdf('tables')}} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">Disposizione Tavoli</a>
+                                </div>
+                            )}
+                        </div>
+						<button onClick={() => setShowArrangeOptions(true)} className="flex items-center bg-blue-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-blue-600 transition-colors">
+							<MagicWandIcon className="h-4 w-4 mr-2" />
+							Auto-Disponi
+						</button>
+						<button onClick={() => setShowResetConfirm(true)} className="flex items-center bg-yellow-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-yellow-600 transition-colors">
+							<ResetIcon className="h-4 w-4 mr-2" />
+							Resetta
+						</button>
+						<button onClick={() => onDeleteEvent(event)} className="flex items-center bg-red-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-red-600 transition-colors">
+							<TrashIcon className="h-4 w-4 mr-2" />
+							Elimina Evento
+						</button>
+					</div>
+                </div>
+
+                <div className="mb-6">
+                    <div className="inline-flex rounded-lg shadow-sm">
+                        <button onClick={() => setActiveSection('guests')} className={`px-6 py-3 text-lg font-bold rounded-l-lg transition-colors ${activeSection === 'guests' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}>
+                            <GuestsIcon className="inline-block w-6 h-6 mr-2" />
+                            Sala Invitati
+                        </button>
+                        <button onClick={() => setActiveSection('staff')} className={`px-6 py-3 text-lg font-bold rounded-r-lg transition-colors ${activeSection === 'staff' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}>
+                            <StaffIcon className="inline-block w-6 h-6 mr-2" />
+                            Sala Staff
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+                    <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm flex flex-col">
+                        <PeopleList 
+                            people={unassignedPeople} 
+                            isLoading={isLoadingPeople} 
+                            onEditPerson={handleEditPerson}
+                            activeSection={activeSection}
+                            onAddPersonClick={() => setIsCreatingPerson(true)}
+                            onAddGroupClick={() => setIsAddingFamily(true)}
+                            onImportClick={() => setIsImporting(true)}
+                            onClearListClick={() => setShowClearListConfirm(true)}
+                        />
+                    </div>
+                    <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm">
+                         <AddTableForm onAddTable={handleAddTable} isAdding={false} />
+                         <div className="flex justify-between items-center my-4">
+                            <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-gray-800 dark:text-gray-100">Tavoli Creati ({tables.length})</h3>
+                            <div className="inline-flex rounded-md shadow-sm">
+                                <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-sm font-medium ${viewMode === 'list' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 hover:bg-gray-50'} rounded-l-lg border border-gray-200 dark:border-gray-600`}>Elenco</button>
+                                <button onClick={() => setViewMode('map')} className={`px-4 py-2 text-sm font-medium ${viewMode === 'map' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 hover:bg-gray-50'} rounded-r-lg border border-gray-200 dark:border-gray-600`}>Mappa</button>
+                            </div>
+                         </div>
+                        
+                        {viewMode === 'list' ? (
+                            <TableList 
+                                tables={tables}
+                                people={people}
+                                onEditPerson={handleEditPerson}
+                                onEditTable={setEditingTable}
+                                onDeleteTable={setDeletingTable}
+                                onToggleLock={handleToggleLock}
+                                activeSection={activeSection}
+                            />
+                        ) : (
+                            <MapView tables={tables} people={people} />
+                        )}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 function Sidebar({ user, auth, isCollapsed, events, isLoading, onSelectEvent, onNavigate, selectedEventId, onShowSettings }) {
     return (
         <aside className={`bg-white dark:bg-gray-800 min-h-screen p-4 flex flex-col shadow-lg transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
