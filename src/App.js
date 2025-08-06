@@ -3,7 +3,6 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, doc, updateDoc, writeBatch, where, getDocs, deleteDoc, orderBy } from 'firebase/firestore';
 import jsPDF from 'jspdf';
-// MODIFICA 1: Importiamo autoTable come una funzione
 import autoTable from 'jspdf-autotable';
 
 
@@ -19,6 +18,9 @@ const AGE_RANGES = [ "Non specificata", "0-2 anni", "3-12 anni", "13-17 anni", "
 const YOUNG_CHILD_RANGES = ["0-2 anni", "3-12 anni"];
 const STAFF_ROLES = ["Staff", "Fotografo", "Videomaker", "DJ", "Musicista", "Animatore", "Wedding Planner", "Altro"];
 const DEFAULT_STRICT_GROUPS = ["Sposi", "Testimoni Sposo", "Testimoni Sposa", "Genitori Sposo", "Genitori Sposa", "Amici Sposo", "Amici Sposa", "Parenti Sposo", "Parenti Sposa"];
+// --- Logo per il PDF in formato Base64 ---
+const seatzenLogoBase64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PHBhdGggZmlsbD0iI2I1OGU0OCIgZD0iTTEyOCAyNkM3Mi43IDI2IDI2IDcyLjcgMjYgMTI4czQ2LjcgMTAyIDEwMiAxMDIgMTAyLTQ2LjcgMTAyLTEwMi00Ni43LTEwMi0xMDItMTAyem0wIDE4NGMtNDUuMiAwLTgyLTMyLjUtODItNzMuN0M0NiA5MS4xIDc5LjggNjggMTI4IDY4czgyIDIzLjEgODIgNjAuM2MwIDQxLjItMzYuOCA3My43LTgyIDczLjd6Ii8+PHBhdGggZmlsbD0iI2I1OGU0OCIgZD0iTTEyOCAxMDVjLTIxLjYgMC0zMyAyMy4xLTMzIDQxLjhzMTEuNCA0MS44IDMzIDQxLjggMzMtMjMuMSAzMy00MS44LTExLjQtNDEuOC0zMy00MS44em0wIDY3LjVjLTQuMSAwLTE2LjEtMTUuNy0xNi4xLTI1LjdzMTItMjUuNyAxNi4xLTI1LjcgNC4xIDAgMTYuMSAxNS43YzAgMTAgMTIgMjUuNy0xNi4xIDI1Ljd6Ii8+PC9zdmc+';
+
 
 // --- HOOKS PERSONALIZZATI ---
 function useTheme() {
@@ -1122,48 +1124,64 @@ function EventView({ event, db, user, onDeleteEvent }) {
     const handleExportPdf = (type) => {
         try {
             const doc = new jsPDF();
-            const title = `${event.name} - ${new Date(event.date).toLocaleDateString('it-IT')}`;
-            doc.text(title, 14, 15);
+            const pageW = doc.internal.pageSize.getWidth();
+
+            // Aggiungo il logo
+            doc.addImage(seatzenLogoBase64, 'SVG', pageW - 45, 8, 30, 30);
+
+            // Imposto i font per i titoli (simili a Lora)
+            doc.setFont('times', 'bold');
+            doc.setFontSize(20);
+            doc.text(event.name, 15, 20);
+            
+            doc.setFont('times', 'normal');
+            doc.setFontSize(12);
+            doc.text(new Date(event.date).toLocaleDateString('it-IT'), 15, 28);
             
             const tableOptions = {
-                startY: 25,
+                startY: 40,
                 styles: {
-                    font: 'helvetica',
+                    font: 'helvetica', // Font simile a Inter per il corpo della tabella
                     cellPadding: 2,
                 },
                 headStyles: {
-                    fillColor: [41, 128, 185],
+                    fillColor: [181, 142, 72], // Colore #b58e48
                     textColor: 255,
                     fontStyle: 'bold',
                 },
             };
+            
+            let head, body, fileName;
 
             if (type === 'guests') {
-                doc.text(`Lista ${activeSection === 'guests' ? 'Invitati' : 'Staff'}`, 14, 22);
-                const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
-                const body = people.map(p => {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text(`Lista ${activeSection === 'guests' ? 'Invitati' : 'Staff'}`, 15, 35);
+                
+                head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
+                body = people.map(p => {
                     const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
                     const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
                     return [p.name, groupName, tableName];
                 });
-
-                // MODIFICA 2: Chiamiamo autoTable come funzione, passando il documento
-                autoTable(doc, { ...tableOptions, head, body });
-                doc.save(`lista_${activeSection}_${event.name}.pdf`);
+                fileName = `lista_${activeSection}_${event.name}.pdf`;
 
             } else if (type === 'tables') {
-                doc.text('Disposizione Tavoli', 14, 22);
-                const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
-                const body = tables.map(t => {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('Disposizione Tavoli', 15, 35);
+
+                head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
+                body = tables.map(t => {
                     const assigned = people.filter(p => p.tableId === t.id);
                     const assignedNames = assigned.map(p => p.name).join('\n');
                     return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
                 });
-                
-                // MODIFICA 2: Chiamiamo autoTable come funzione, passando il documento
-                autoTable(doc, { ...tableOptions, head, body });
-                doc.save(`disposizione_tavoli_${event.name}.pdf`);
+                fileName = `disposizione_tavoli_${event.name}.pdf`;
             }
+
+            autoTable(doc, { ...tableOptions, head, body });
+            doc.save(fileName);
 
         } catch (error) {
             console.error("Errore durante la generazione del PDF:", error);
