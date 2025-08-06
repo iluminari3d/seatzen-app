@@ -4,10 +4,10 @@ import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, creat
 import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, doc, updateDoc, writeBatch, where, getDocs, deleteDoc, orderBy } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import seatzenLogo from './logos/seatzen-logo.png';
 
 
 // --- Author: I Luminari SRLS - www.iluminari3d.com ---
-// --- VERSIONE CON MAPPA INTERATTIVA ---
 
 // --- CONFIGURAZIONE FIREBASE ---
 const firebaseConfig = process.env.REACT_APP_FIREBASE_CONFIG ? JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG) : {};
@@ -1062,6 +1062,79 @@ function EventView({ event, db, user, onDeleteEvent }) {
     const [showClearListConfirm, setShowClearListConfirm] = useState(false);
     const [isClearingList, setIsClearingList] = useState(false);
     const [isAddingFamily, setIsAddingFamily] = useState(false);
+const handleExportPdf = (type) => {
+        try {
+            const doc = new jsPDF();
+            
+            // --- INIZIO PERSONALIZZAZIONE ---
+
+            // 1. Aggiungi il logo al PDF
+            // Parametri: (file_logo, formato, x, y, larghezza, altezza)
+            // Lo posizioniamo in alto a destra.
+            doc.addImage(seatzenLogo, 'PNG', 150, 8, 45, 12);
+
+            // 2. Imposta il colore del testo personalizzato (es. blu)
+            const brandColor = '#2563eb'; // <-- CAMBIA QUESTO con il colore della tua app
+            doc.setTextColor(brandColor);
+
+            // --- FINE PERSONALIZZAZIONE ---
+            
+            // Titolo principale del documento
+            const title = `${event.name}`;
+            doc.setFont(undefined, 'bold'); // Applica il grassetto
+            doc.text(title, 14, 15);
+
+            // Data dell'evento (sottotitolo)
+            doc.setFont(undefined, 'normal'); // Togli il grassetto
+            doc.setTextColor('#6b7280'); // Grigio per il testo secondario
+            doc.text(new Date(event.date).toLocaleDateString('it-IT'), 14, 22);
+            
+            const tableOptions = {
+                startY: 35, // Abbassiamo la tabella per fare spazio al logo e ai titoli
+                styles: {
+                    font: 'helvetica', // Usiamo un font standard e pulito
+                    cellPadding: 2,
+                },
+                headStyles: {
+                    fillColor: brandColor, // Colore personalizzato per l'intestazione
+                    textColor: '#ffffff',   // Testo bianco
+                    fontStyle: 'bold',
+                },
+                alternateRowStyles: {
+                    fillColor: '#f3f4f6' // Grigio chiaro per le righe alternate
+                }
+            };
+
+            if (type === 'guests') {
+                const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
+                const body = people.map(p => {
+                    const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
+                    const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
+                    return [p.name, groupName, tableName];
+                });
+
+                autoTable(doc, { ...tableOptions, head, body });
+                doc.save(`lista_${activeSection}_${event.name}.pdf`);
+
+            } else if (type === 'tables') {
+                const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
+                const body = tables.map(t => {
+                    const assigned = people.filter(p => p.tableId === t.id);
+                    const assignedNames = assigned.map(p => p.name).join('\n');
+                    return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
+                });
+                
+                autoTable(doc, { ...tableOptions, head, body });
+                doc.save(`disposizione_tavoli_${event.name}.pdf`);
+            }
+
+        } catch (error) {
+            console.error("Errore durante la generazione del PDF:", error);
+            alert("Si è verificato un errore durante la creazione del PDF. Controlla la console per maggiori dettagli.");
+        } finally {
+            setShowExportMenu(false);
+        }
+    };
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -1850,3 +1923,4 @@ function App() {
 }
 
 export default App;
+
