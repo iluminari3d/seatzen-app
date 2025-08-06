@@ -19,9 +19,6 @@ const YOUNG_CHILD_RANGES = ["0-2 anni", "3-12 anni"];
 const STAFF_ROLES = ["Staff", "Fotografo", "Videomaker", "DJ", "Musicista", "Animatore", "Wedding Planner", "Altro"];
 const DEFAULT_STRICT_GROUPS = ["Sposi", "Testimoni Sposo", "Testimoni Sposa", "Genitori Sposo", "Genitori Sposa", "Amici Sposo", "Amici Sposa", "Parenti Sposo", "Parenti Sposa"];
 
-// --- Logo per il PDF in formato Base64 (PNG) - VERSIONE CORRETTA ---
-const seatzenLogoBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABlBMVEUAAAD///+l2Z/dAAAFKklEQVR42u3dO3LbMBSG4b0STxksS1gmdQgmFch8gSg97E5yA+SGA2OkLgPZgskFJ25gKZBMSHD22D5JSxL/P/y3sEAZ2SHI/b1Iu6Kk5OR0YyGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEII2Qz5n4mQn5XchPy0pCMhPy3pSMgPkvQk5GdJepLyMCTpScjDkKSkYyHs5uP2/0F08tP2v6lXf5t+Pj59/+e1n7/7f/Pzv6c//P386+9//9XfP395/59//z3956+nv/35+p///n/6+7e//P0f355+9+P7/0/3/9n/9Z//8+9vf/v7P7798c3P3/769/8/vX/5lZ+fP//943/7+a+///3X3/7y119/+/P3v/n5W3/95S+/+uUv//zlP//89Zeff/vrP/7y8+v/fv7jP//89Vd+fv7mZ2/+9qf//vPX//zm52/95dff//n661/+9Zff/vn7P//111/+8+v//Ps//vmXn5//+sUv//77P/7p61//8b//7M//+r/9/deff/76y1++//bXf/jP//7rP//z1Z/ff/H7P/71P//7L3/55+//+vM//vnrb375+T/+8Z//9Ouv/+Nf//nrb37597//85///Os//vGv//z7r375y19//eUv//nrr/785m//+t+v//zrL3/197//6s9v//qf//nXX/7113/+9c/ffvbzP//+q7/9+de///PbX377619++et//v3Xn//5m//866++9o/ff/kP737+1X/+9c+//uavv/7y1V/+8s///vWXf/nrb/7y6s8//vn7//2z3//sP//+6z//8vPvf/aPn//y93/+8vMr//jXf/7tV//+9X/+9Zc///brv/356++/+/V///brr//8/Z///ddf//2f//nrb/799V/+9e/ff/3nP7/5+dvffvXrX375m7/9+dc//+3Xf/nn1//+9R/+5eef//nPf/71f/7z97/+9a+///UXf/j2h/f//t+///Vf//2f//2f//mrf//P//zm5//8+fuvfvnrv/765+//8x//+S///vsf/vmrv/z7//rP//7yP//z11/+8q/ff//zP/7z9z//5e//+Ne//PzHf/7561/++Vd/fvOr33/59b9+/Z+//PrrP3z/5bdf/frPv/3rv/7qf/7zVz//+ev//vrL3/78zZ/+/Os//f2f//nrb/7y13/851d/+etv//p3//7zP/7zP3/5m//8y//851/+9e/ff/nrLz//8v3/9u//+s9///NffvWrv3zz/s+//vtff//n7//+9R/+8u9/+Pbn7/75+R//9P1f//7P//nz93/9z7/++Z9f//bXX//rP7/+9R++fe3rv7z+8u9f//P3v/n1n/79t//8+19/+e/v/vn1l3/+1b/++V/+8u+/+suv//vnb//yl7//9o/ffvbzP//qH9/9/Nev/vr7//39P//6//Xf/vl///P3X3/1nz//8u9/+/Vf/vmrf//vX3/tP//y219+9e/fff3X//z9f/3rX3/99R/+9ev//Psf/vl///mv//Lzr3/+y//+z1/+8h/f/fL7X/7y8++/+/XffvW//fXXX37tH7/75Z/f/+wff/nrP/z7P379s//8+6++/st//v3nf/71l//91V/++d+///W///2fv/zlP/zz119+9av/ePvrf371y1/+9Zdv/vrP//zrb/79r/7y9T9+8/O///bzv/77X//y89/9+r+/+utf/vWXv/znP//9P/7y86++/Mv///O///znf//rb/766z98+9rnv3/76s/f//Wfv/zLf/71t3/5+T9//Zd/ffPz//vL//71H/72r3/793/5y7/+9e/ff/7z73/+9z9/+d+//uUvv/m3f/nrv/z+11/+5t+//sN//+U//vnrv/nrv/3tH3/tX//+z//8+r//8te//vvff/3zP//2r//2t3/51V/+5d///R+/fe2b9/74m//+9V/+5ec/+fkvv/3zP3/5h//+9Re///p3//pff//z919++et/ff3+L//+z//8+y///et//vbrr//yP//897//8pe/+/Vf//n6P//zV3/99nfff/Pqf/7zP//891/+8h+f//brP3zz6s+/ffvnb/766z/+8s///vXv//vrr7/+91/++ddf//Vffvrzn/72t3/+63//9X/+9Zc//+avf/3y3//89Ze/eP/mP//zN//8+y//5es///OrP/zrP3/9z3/+9Ve/f//zX//1V3/5y99/+/v//eU///Nff//P3//1l//99R/++V/e/e+v//brr7/6t//82z//9ld//cvv//rvP3z/99/++Z+///PrP3z3/7/+8u+//vWXv/zVn/75y7//89dffeUfv/nL9/7+1V/+8pdffvmPf3/5679+/Z+//Ps///nXf/rLrz/92z//6u+//PW3//z7P//9X3/5+39+9c+//vnrP/3l13/59R++f/nr//n7P/79rz/+8p///Ov//M9f/f3Pv3/76r/++Z+//vsf/uXn//zzrz/+8z//8vOffvnn//zbX//591/96f6v/+Uf//nX//y3v/3yV3/7y8+//P1f//Vf//l///k///VXv/nPf//217/+5eef//Wf//2f//nrb/799V/+9e/f/+rP//z1P7/++h+/+vWXX3/12z//85//+def//znb//2r//+r//8+69+9e/fff0P//jPr//5n7/85Vd//fVX//n6L3/55+//+s///OurX//5P7/+z6/++d+//+bX//yrP//y6y+//Osf//n7X/7y8//+9Vd//bN/+es///qrX/75V3/9z3/+9a+/+/v//M///M9f//WXf//VX//5+s+//uav//q3v/zrv/7y669++es///O/vPvr//z7L//5r7/827/+9rff/fW3f/nbP/7y119+5d//5z///S+//st//v3nf/71l//91V/+8hd/+uVf//W3v/3t//znb//6r7/85d9//esv//nrL//5q7/+279+8/O///Pvv/zlV//9t//yl7/98zd/+de///Pr//z7L//89Re//Os///P3v//zP/7z7//yl7/+9//8y//869/+8u+//Pr7P//5l//5t3/95a9//bO/ffvqP//6b3/5y6/+5s9/fPPrP3/5+a/f/+uPf/vLr/7+z//86//8+s9//vtff/n1P/7zL3/5t7/+z//+8te//uvvf/b6n7/8+e+//uavv/7yV3/55///9Zd/+eufvvXvP/2bf/7zV3/58/dfffUf//zrL7/++qsf//W/fv/rL7/+9//+r3/76y//+as//es//vnPX/76V7/++V/+5e//+c///vOrP735h//886+//PXvf/nrv/z+11/+5t+/+/p/fvnrv/z113/+9T9+9e/f//2///VXf/32d/9y//ff//1///bXr//+z6//8+/f//2fv/ztr7/88ve/+vWXf/n1P/7y6y/+/Pvf/+U///pP//nzX/76r//y+c+//vPvv/z877/89Zd/+etf//3nf/7lr//+t7/9+/e/+eUvf/XLP/zzrz/95//9+Vd/+es///v3//7zP//8+y///etf/vnrP/7yq7/+9tdf/eXr//zrv377199+/T/+51f/9V/+9a+//st//v3nf/71l//91V/+8o9v//rP//7y//351R/++atf/fn3P3/9z//+2j/++h+/+c+//vnrP/3l13/59R++f/nrP/z7P/71P//89X/+86+//Psf//n6L3/5t7/+66///u+//vVX//n6L//5669+8+t//OsfXv3hW3//r7/+8ld/+es///v3//7zP//8+y///etf/vnrP/7yq7/+9tdf/eXr//zrv377199+/T/+51d//Zd/ffPz//vL//71H/72r3/793/5y6/+9e/f//nPf/7zP//zrz/+8ld/+fR///V///nXf//nL7/693/95Vd/++Vf//X3v/7Vv//zn//yl7/62z//86+//vPvf/6X//zbv//2P3/+8++/+/Vffv23v//rP//5P/7zL//y+//+8ld/+/M//vt///l///W/v/7rr//+z//869/+8u+//vWXv/znX//593/+9ldf/+VffvW/P3/9r//8y7/+z1+//vP3v/nrd/9+9etffvWnf/nrr//y//78z//+8pe//Os///rvv37/5n/+9as//vmrX/3l13/59R++f/nrP/z7P/71P//89X/+86+//Psf//n6P/72P3/95V9/+/O3v/7rP/3+7Vd/+v1ff/nrP//8+y9/++u///PXf//n6//861//+ev//vrL3/78519//ev//PvrL//yl7/989dvfvmrX/7561/++ddf//Vffvrzn/72t3/+63//9X/+9Zc//+avf/3y3//89Ze/eP/mP//zN//8+y//5es///OrP/zrP3/9z3/+9Ve/f//zX//1V3/5y99/+/v//eU///Nff//P3//1l//99R/+8h+///p///n6r//+t7/+8u+//o9/ffn7P//y119+5d//5z///S+//st//v3nf/71l//91V/+8o/f/PWXf/nzV3/9t//8y3/++i///Otffvnvv//rL//+r7/+y//+z1/+8h+f//brP/7yq3/+2+//+is///Pr//zb//7zP/7zrz/+8ld/+fR///V///nXf//nL7/693/95Vd/+fVff/X3f/3rX3/5+1//8td/+e/f/vVXf/nrf/79V//tH/7z+s///Os///PX//yXr/7yr7/89R//+etf//3v//rrP/3zV3/99X/+9Td/+def/vLzH//+r//2L//z77/8+s+//uuv/vKv//qP//zrL7/++qsf//W/f//rL//5P3/9z39+8/P/+6///Pvb//zbP/76V3/7z6++/Mv///O///znf//rb/766z98+9rnv3/76s/f//Wfv/zLf/71t3/5+T9//Zd/ffPz//vL//71H/72r3/793/5y6/+9e/f//lPf//zL3/5t3/567/8/u+//uav//q3v/zrv/7y669++es///Ov//Lrr37551/99T9++cu///O3v/n1P//89V//8u+/+suv/vPnb//yl7/+9o/ffPbzP//qH9/9/Nev/vr7//39P//6//Xf//1///f3X3/1nz//8u9/+/Vf//l///b3//zrX/72H//+9V/+5ec/+fkvv/3zP/7yP//7z1/+8h+/+c9f/vn3X//y86/f/+evv/zl33/95V/+5a9/++Vv//Prv/z2r3/92z//6u9f//lff//zL7/85V/++eu///rP3/71n7/89Zd/+/1ffvnVX/76+1/+9de//ov/3//57X9//eUv//nrL//5q7/+279+8/O///Pvv/zlV//9t//yl7/98zd/+de///Pr//z7L//89Re//Os///P3v//zP/7z7//yl7/+9//8y//869/+8u+//vWXv/znX//593/+9ldf/+VffvW/P3/9r//8y7/+z1+//vP3v/nrd/9+9etffvWnf/nrr//y//78z//+8pe//Os///rvv37/5n/+9as//vmrX/3l13/59R++f/nrP/z7P/71P//89X/+86+//Psf//n6r//8y3/++i///Otffvnvv//rL//+r7/+y//+z1/+8h+f//brP/7yq3/+2+//+is///Pr//zb//7zP/7zrz/+8ld/+fR///V///nXf//nL7/693/95Vd/+fVff/X3f/3rX3/5+1//8td/+e/f/vVXf/nrf/79V//tH/7z+s///Os///PX//yXr/7yr7/89R//+etf//3v//rrP/3zV3/99X/+9Td/+def/vLzH//+r//2L//z77/8+s+//uuv/vKv//qP//zrL7/++qsf//W/f//rL//5P3/9z39+8/P/+6///Pvb//zbP/76V3/7z6++/Mv///O///znf//rb/766z98+9rnv3/76s/f//Wfv/zLf/71t3/5+T9//Zd/ffPz//vL//71H/72r3/793/5y6/+9e/f//lPf//zL3/5t3/567/8/u+//uav//q3v/zrv/7y669++es///Ov//Lrr37551/99T9++cu///O3v/n1P//89V//8u+/+suv/vPnb//yl7/+9o/ffPbzP//qH9/9/Nev/vr7//39P//6//Xf//1///f3X3/1nz//8u9/+/Vf//l///b3//zrX/72H//+9V/+5ec/+fkvv/3zP/7yP//7z1/+8h+/+c9f/vn3X//y86/f/+evv/zl33/95V/+5a9/++Vv//Prv/z2r3/92z//6u9f//lff//zL//8y//821/+9R/+9a+//st//v3nf/71l//91V/+8o9v//rP//7y//351R/++atf/fn3P3/9z//+2j/++h+/+c9f/vn3X//y86/f/+evv/zl33/95V/+5a9/++Vv//Prv/z2r3/92z//6u9f//lff//zL//8y//8y1/+9R/+9a+//st//v3nf/71l//91V/+8o9v//rP//7y//351R/++atf/fn3P3/9z//+2j/++h+/+c9f/vn3X//y86/f/+evv/zl33/95V/+5a9/++Vv//Prv/z2r3/92z//6u9f//lff//zL//8y//8y//8y1/+9R/+9a+//st//v3nf/71l//91V/+8h+/+eU//vnXf/rLrz/92z//6u+//PW3f/n5P3/95V/+5ac///23v/3rP//yH9/9/Z+//vLzb/7y869/+esv//pP//nXP/7yr7/8679/+def//23v/zrv/7y669++ev///kvX/36X3/58/dfffUf//nXf//nX/71H//5l7/+23/+5Vf/9V9+/def//Uv//mX//nrL//5q7/+21/+8q+/fPWXf/nzr//8y3/++i///Otffvnvv//rL//+r7/+y//+z1/+8h+f//brP/7yq3/+2+//+is///Pr//zb//7zP/7zrz/+8ld/+fR///V///nXf//nL7/693/95Vd/+fVff/X3f/3rX3/5+1//8td/+e/f/vVXf/nrf/79V//tH/7z+s///Os///PX//yXr/7yr7/89R//+etf//3v//rrP/3zV3/99X/+9Td/+def/vLzH//+r//2L//z77/8+s+//uuv/vKv//qP//zrL7/++qsf//W/f//rL//5P3/9z39+8/P/+6///Pvb//zbP/76V3/7z6++/Mv///O///znf//rb/766z98+9rnv3/76s/f//Wfv/zLf/71t3/5+T9//Zd/ffPz//vL//71H/72r3/793/5y6/+9e/f//lPf//zL3/5t3/567/8/u+//uav//q3v/zrv/7y669++es///Ov//Lrr37551/99T9++cu///O3v/n1P//89V//8u+/+suv/vPnb//yl7/+9o/ffPbzP//qH9/9/Nev/vr7//39P//6//Xf//1///f3X3/1nz//8u9/+/Vf//l///b3//zrX/72H//+9V/+5ec/+fkvv/3zP/7yP//7z1/+8h+/+c9f/vn3X//y86/f/+evv/zl33/95V/+5a9/++Vv//Prv/z2r3/92z//6u9f//lff//zL//8y1/+9R/+9a+//st//v3nf/71l//91V/+8o9v//rP//7y//351R/++atf/fn3P3/9z//+2j/++h+/+c9f/vn3X//y86/f/+evv/zl33/95V/+5a9/++Vv//Prv/z2r3/92z//6u9f//lff//zL//8y//8y1/+9R/+9a+//st//v3nf/71l//91V/+8o9v//rP//7y//351R/++atf/fn3P3/9z//+2j/++h+/+c9f/vn3X//y86/f/+evv/zl33/95V/+5a9/++Vv//Prv/z2r3/92z//6u9f//lff//zL//8y//8y//8y1/+9R/+9a+//st//v3nf/71l//91V/+8h+/+eU//vnXf/rLrz/92z//6u+//PW3f/n5P3/95V/+9ac///23v/3rP//yH9/9/Z+//vLzb/7y869/+es///Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov//Ov-.. ."
-
 // --- HOOKS PERSONALIZZATI ---
 function useTheme() {
     const [theme, setTheme] = useState(() => {
@@ -87,6 +84,7 @@ function FileImportIcon({ className }) { return (<svg className={className} fill
 
 
 // --- MODALI ---
+// ... tutti i componenti modali rimangono invariati ...
 function SettingsModal({ currentTheme, onThemeChange, onClose }) {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 animate-fade-in">
@@ -1121,15 +1119,31 @@ function EventView({ event, db, user, onDeleteEvent }) {
         );
     }
 
-    const handleExportPdf = (type) => {
+    // --- FUNZIONE PDF CORRETTA ---
+    const handleExportPdf = async (type) => { // La funzione ora è "async" per attendere il caricamento dell'immagine
         try {
             const doc = new jsPDF();
             const pageW = doc.internal.pageSize.getWidth();
 
-            // Aggiungo il logo (formato PNG)
-            doc.addImage(seatzenLogoBase64, 'PNG', pageW - 45, 8, 30, 30);
+            // PASSO 1: Carica l'immagine dal file nella cartella public
+            // Assicurati di avere un'immagine chiamata 'seatzen-logo.png' in 'public/logos/'
+            const logoUrl = '/logos/seatzen-logo.png'; 
+            const img = new Image();
+            img.src = logoUrl;
 
-            // Imposto i font per i titoli (simili a Lora)
+            // Attende che l'immagine sia completamente caricata prima di procedere
+            await new Promise((resolve, reject) => {
+                img.onload = () => resolve();
+                img.onerror = (err) => {
+                    console.error("Errore nel caricamento del logo:", err);
+                    reject("Impossibile caricare il logo. Controlla che il file esista in 'public/logos/seatzen-logo.png'");
+                };
+            });
+
+            // PASSO 2: Aggiungi l'immagine (ora caricata) al PDF
+            doc.addImage(img, 'PNG', pageW - 45, 8, 30, 30);
+
+            // Stili e testi del documento
             doc.setFont('times', 'bold');
             doc.setFontSize(20);
             doc.text(event.name, 15, 20);
@@ -1141,7 +1155,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
             const tableOptions = {
                 startY: 40,
                 styles: {
-                    font: 'helvetica', // Font simile a Inter per il corpo della tabella
+                    font: 'helvetica',
                     cellPadding: 2,
                 },
                 headStyles: {
@@ -1185,7 +1199,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
 
         } catch (error) {
             console.error("Errore durante la generazione del PDF:", error);
-            alert("Si è verificato un errore durante la creazione del PDF. Controlla la console per maggiori dettagli.");
+            alert(`Si è verificato un errore durante la creazione del PDF: ${error}`);
         } finally {
             setShowExportMenu(false);
         }
