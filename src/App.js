@@ -1118,16 +1118,39 @@ function EventView({ event, db, user, onDeleteEvent }) {
     }
 
     const handleExportPdf = async (type) => {
-    setIsExportingPdf(true); // <-- ATTIVIAMO IL CARICAMENTO
+    setIsExportingPdf(true);
     try {
         await new Promise(resolve => {
             const img = new Image();
+            // Assicurati che l'immagine possa essere caricata da origini diverse
+            // (importante per il corretto funzionamento del canvas)
+            img.crossOrigin = "Anonymous";
             img.src = '/logos/seatzen-logo.png'; 
             
             img.onload = () => {
-                // ... (tutto il codice per generare il PDF rimane identico) ...
+                // --- NUOVA LOGICA CON CANVAS ---
+                // 1. Creiamo un elemento <canvas> invisibile
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                // 2. Otteniamo il "contesto" 2D per poterci disegnare sopra
+                const ctx = canvas.getContext('2d');
+
+                // 3. Disegniamo l'immagine che abbiamo caricato dentro al canvas
+                ctx.drawImage(img, 0, 0);
+
+                // 4. Convertiamo il contenuto del canvas in una stringa di testo Base64
+                // Questo è un formato universale che jsPDF capisce sempre.
+                const dataURL = canvas.toDataURL('image/png');
+                // --- FINE NUOVA LOGICA ---
+
                 const doc = new jsPDF();
-                doc.addImage(img, 'PNG', 150, 8, 45, 12);
+                
+                // 5. Passiamo questa stringa al PDF invece dell'oggetto immagine.
+                doc.addImage(dataURL, 'PNG', 150, 8, 45, 12);
+
+                // ...tutto il resto del codice rimane identico...
                 const brandColor = '#2563eb';
                 doc.setTextColor(brandColor);
                 const title = `${event.name}`;
@@ -1163,6 +1186,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
                 }
                 resolve();
             };
+
             img.onerror = () => {
                 alert("Impossibile caricare il logo per il PDF.");
                 console.error("Errore nel caricamento di /logos/seatzen-logo.png");
@@ -1175,7 +1199,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
         alert("Si è verificato un errore durante la creazione del PDF.");
     } finally {
         setShowExportMenu(false);
-        setIsExportingPdf(false); // <-- DISATTIVIAMO IL CARICAMENTO
+        setIsExportingPdf(false);
     }
 };
 
@@ -1879,6 +1903,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
