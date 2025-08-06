@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#3a4a42" />
+    <meta
+      name="description"
+      content="L'app definitiva per organizzare i tavoli di matrimoni ed eventi. Gestisci invitati, preferenze e crea la disposizione perfetta senza stress."
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>SeatZen - Organizza i tavoli dei tuoi eventi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+
+<style>
+    /* 1. Stile per le icone monocromatiche (tecnica maschera) */
+    .icon-mask {
+    display: inline-block;
+    background-color: #1f2937; /* Colore per TEMA CHIARO */
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    }
+
+    .dark .icon-mask {
+    background-color: #d1d5db; /* Colore per TEMA SCURO */
+    }
+
+    /* 2. Stile per alternare i loghi in base al tema */
+    .logo-dark-theme { display: none; }
+    .logo-light-theme { display: block; }
+
+    .dark .logo-dark-theme { display: block; }
+    .dark .logo-light-theme { display: none; }
+</style>
+</head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

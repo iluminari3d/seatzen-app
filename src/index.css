@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definizione delle variabili di colore per i temi */
+:root {
+  --sz-bg-primary: #F5F0E6; /* Sfondo principale chiaro */
+  --sz-bg-secondary: #FDFBF7; /* Sfondo secondario chiaro */
+  --sz-text-primary: #333333; /* Testo primario scuro */
+  --sz-text-secondary: #4A5B53; /* Testo secondario scuro */
+  --sz-border-color: #e5e7eb; /* Colore bordo chiaro */
+
+  /* Colori per la sezione INVITATI (Oro) */
+  --sz-accent-guests: #C09A50;
+  --sz-accent-guests-hover: #b58e48;
+
+  /* Colori per la sezione STAFF (Verde) */
+  --sz-accent-staff: #4A5B53;
+  --sz-accent-staff-hover: #3a4a42;
+
+  /* Colore accento di default (sarà sovrascritto dinamicamente) */
+  --sz-accent-color: var(--sz-accent-guests);
+  --sz-accent-color-hover: var(--sz-accent-guests-hover);
+}
+
+/* Tema Scuro */
+html.dark {
+  --sz-bg-primary: #111827; /* gray-900 */
+  --sz-bg-secondary: #1f2937; /* gray-800 */
+  --sz-text-primary: #f9fafb; /* gray-50 */
+  --sz-text-secondary: #9ca3af; /* gray-400 */
+  --sz-border-color: #374151; /* gray-700 */
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--sz-bg-primary);
+  color: var(--sz-text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Classi di utilità per applicare i colori dinamici */
+.sz-accent-bg {
+  background-color: var(--sz-accent-color);
+}
+.sz-accent-bg-hover:hover {
+  background-color: var(--sz-accent-color-hover);
+}
+.sz-accent-text {
+  color: var(--sz-accent-color);
+}
+.sz-focus-ring:focus {
+  --tw-ring-color: var(--sz-accent-color);
+}
+.sz-accent-fill {
+  fill: var(--sz-accent-color);
+}
+
+
+.animate-fade-in { 
+  animation: fadeIn 0.5s ease-in-out; 
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(-10px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
