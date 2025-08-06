@@ -1062,7 +1062,62 @@ function EventView({ event, db, user, onDeleteEvent }) {
     const [showClearListConfirm, setShowClearListConfirm] = useState(false);
     const [isClearingList, setIsClearingList] = useState(false);
     const [isAddingFamily, setIsAddingFamily] = useState(false);
-const handleExportPdf = (type) => {
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+                setShowExportMenu(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [exportMenuRef]);
+
+    useEffect(() => {
+        if (!db || !user || !event) {
+            setPeople([]);
+            setTables([]);
+            setStrictGroups([]);
+            return;
+        };
+
+        const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+        const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
+        const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
+        const groupsPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/strictGroups`;
+
+        setIsLoadingPeople(true);
+        setIsLoadingTables(true);
+
+        const unsubPeople = onSnapshot(query(collection(db, peoplePath), orderBy("name")), snap => {
+            setPeople(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            setIsLoadingPeople(false);
+        }, err => { console.error(err); setIsLoadingPeople(false); });
+
+        const qTables = query(collection(db, tablesPath), where("section", "==", activeSection), orderBy("createdAt"));
+        const unsubTables = onSnapshot(qTables, snap => {
+            setTables(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            setIsLoadingTables(false);
+        }, err => { console.error(err); setIsLoadingTables(false); });
+
+        const unsubGroups = activeSection === 'guests'
+            ? onSnapshot(query(collection(db, groupsPath), orderBy("name")), snap => { setStrictGroups(snap.docs.map(d => ({ id: d.id, ...d.data() }))); }, err => console.error(err))
+            : () => { setStrictGroups([]); return () => {}; };
+
+        return () => { unsubPeople(); unsubTables(); unsubGroups(); };
+    }, [db, user, event, activeSection]);
+
+    // This guard clause now comes AFTER all hooks have been called.
+    if (!event) {
+        return (
+            <div className="flex justify-center items-center w-full h-full p-8 dark:bg-gray-900">
+                <p className="text-gray-600 dark:text-gray-300">Caricamento evento in corso...</p>
+            </div>
+        );
+    }
+
+    const handleExportPdf = (type) => {
         try {
             const doc = new jsPDF();
             
@@ -1135,119 +1190,6 @@ const handleExportPdf = (type) => {
             setShowExportMenu(false);
         }
     };
-
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
-                setShowExportMenu(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [exportMenuRef]);
-
-    useEffect(() => {
-        if (!db || !user || !event) {
-            setPeople([]);
-            setTables([]);
-            setStrictGroups([]);
-            return;
-        };
-
-        const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
-        const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
-        const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
-        const groupsPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/strictGroups`;
-
-        setIsLoadingPeople(true);
-        setIsLoadingTables(true);
-
-        const unsubPeople = onSnapshot(query(collection(db, peoplePath), orderBy("name")), snap => {
-            setPeople(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-            setIsLoadingPeople(false);
-        }, err => { console.error(err); setIsLoadingPeople(false); });
-
-        const qTables = query(collection(db, tablesPath), where("section", "==", activeSection), orderBy("createdAt"));
-        const unsubTables = onSnapshot(qTables, snap => {
-            setTables(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-            setIsLoadingTables(false);
-        }, err => { console.error(err); setIsLoadingTables(false); });
-
-        const unsubGroups = activeSection === 'guests'
-            ? onSnapshot(query(collection(db, groupsPath), orderBy("name")), snap => { setStrictGroups(snap.docs.map(d => ({ id: d.id, ...d.data() }))); }, err => console.error(err))
-            : () => { setStrictGroups([]); return () => {}; };
-
-        return () => { unsubPeople(); unsubTables(); unsubGroups(); };
-    }, [db, user, event, activeSection]);
-
-    // This guard clause now comes AFTER all hooks have been called.
-    if (!event) {
-        return (
-            <div className="flex justify-center items-center w-full h-full p-8 dark:bg-gray-900">
-                <p className="text-gray-600 dark:text-gray-300">Caricamento evento in corso...</p>
-            </div>
-        );
-    }
-
-    const handleExportPdf = (type) => {
-    try {
-        const doc = new jsPDF();
-
-        // Per un supporto completo dei caratteri speciali, sarebbe necessario incorporare un font .ttf
-        // Esempio: doc.setFont('MyCustomFont');
-
-        const title = `${event.name} - ${new Date(event.date).toLocaleDateString('it-IT')}`;
-        doc.text(title, 14, 15);
-
-        const tableOptions = {
-            startY: 25,
-            styles: {
-                font: 'helvetica',
-                cellPadding: 2,
-            },
-            headStyles: {
-                fillColor: [41, 128, 185],
-                textColor: 255,
-                fontStyle: 'bold',
-            },
-        };
-
-        if (type === 'guests') {
-            doc.text(`Lista ${activeSection === 'guests' ? 'Invitati' : 'Staff'}`, 14, 22);
-            const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
-            const body = people.map(p => {
-                const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
-                const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
-                return [p.name, groupName, tableName];
-            });
-
-            // Ecco la chiamata corretta
-            autoTable(doc, { ...tableOptions, head, body }); 
-            doc.save(`lista_${activeSection}_${event.name}.pdf`);
-
-        } else if (type === 'tables') {
-            doc.text('Disposizione Tavoli', 14, 22);
-            const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
-            const body = tables.map(t => {
-                const assigned = people.filter(p => p.tableId === t.id);
-                const assignedNames = assigned.map(p => p.name).join('\n');
-                return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
-            });
-
-            // Ecco la chiamata corretta
-            autoTable(doc, { ...tableOptions, head, body }); 
-            doc.save(`disposizione_tavoli_${event.name}.pdf`);
-        }
-
-    } catch (error) {
-        console.error("Errore durante la generazione del PDF:", error);
-        alert("Si è verificato un errore durante la creazione del PDF. Controlla la console per maggiori dettagli.");
-    } finally {
-        setShowExportMenu(false);
-    }
-};
 
 
     const handleAddTable = async (tableName, tableCapacity, tableShape) => {
@@ -1923,4 +1865,5 @@ function App() {
 }
 
 export default App;
+
 
