@@ -3,7 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, doc, updateDoc, writeBatch, where, getDocs, deleteDoc, orderBy } from 'firebase/firestore';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 
 // --- Author: I Luminari SRLS - www.iluminari3d.com ---
@@ -1119,60 +1119,62 @@ function EventView({ event, db, user, onDeleteEvent }) {
     }
 
     const handleExportPdf = (type) => {
-        try {
-            const doc = new jsPDF();
-            
-            // Per un supporto completo dei caratteri speciali, sarebbe necessario incorporare un font .ttf
-            // Esempio: doc.setFont('MyCustomFont');
+    try {
+        const doc = new jsPDF();
 
-            const title = `${event.name} - ${new Date(event.date).toLocaleDateString('it-IT')}`;
-            doc.text(title, 14, 15);
-            
-            const tableOptions = {
-                startY: 25,
-                styles: {
-                    font: 'helvetica',
-                    cellPadding: 2,
-                },
-                headStyles: {
-                    fillColor: [41, 128, 185],
-                    textColor: 255,
-                    fontStyle: 'bold',
-                },
-            };
+        // Per un supporto completo dei caratteri speciali, sarebbe necessario incorporare un font .ttf
+        // Esempio: doc.setFont('MyCustomFont');
 
-            if (type === 'guests') {
-                doc.text(`Lista ${activeSection === 'guests' ? 'Invitati' : 'Staff'}`, 14, 22);
-                const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
-                const body = people.map(p => {
-                    const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
-                    const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
-                    return [p.name, groupName, tableName];
-                });
+        const title = `${event.name} - ${new Date(event.date).toLocaleDateString('it-IT')}`;
+        doc.text(title, 14, 15);
 
-                doc.autoTable({ ...tableOptions, head, body });
-                doc.save(`lista_${activeSection}_${event.name}.pdf`);
+        const tableOptions = {
+            startY: 25,
+            styles: {
+                font: 'helvetica',
+                cellPadding: 2,
+            },
+            headStyles: {
+                fillColor: [41, 128, 185],
+                textColor: 255,
+                fontStyle: 'bold',
+            },
+        };
 
-            } else if (type === 'tables') {
-                doc.text('Disposizione Tavoli', 14, 22);
-                const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
-                const body = tables.map(t => {
-                    const assigned = people.filter(p => p.tableId === t.id);
-                    const assignedNames = assigned.map(p => p.name).join('\n');
-                    return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
-                });
-                
-                doc.autoTable({ ...tableOptions, head, body });
-                doc.save(`disposizione_tavoli_${event.name}.pdf`);
-            }
+        if (type === 'guests') {
+            doc.text(`Lista ${activeSection === 'guests' ? 'Invitati' : 'Staff'}`, 14, 22);
+            const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
+            const body = people.map(p => {
+                const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
+                const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
+                return [p.name, groupName, tableName];
+            });
 
-        } catch (error) {
-            console.error("Errore durante la generazione del PDF:", error);
-            alert("Si è verificato un errore durante la creazione del PDF. Controlla la console per maggiori dettagli.");
-        } finally {
-            setShowExportMenu(false);
+            // Ecco la chiamata corretta
+            autoTable(doc, { ...tableOptions, head, body }); 
+            doc.save(`lista_${activeSection}_${event.name}.pdf`);
+
+        } else if (type === 'tables') {
+            doc.text('Disposizione Tavoli', 14, 22);
+            const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
+            const body = tables.map(t => {
+                const assigned = people.filter(p => p.tableId === t.id);
+                const assignedNames = assigned.map(p => p.name).join('\n');
+                return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
+            });
+
+            // Ecco la chiamata corretta
+            autoTable(doc, { ...tableOptions, head, body }); 
+            doc.save(`disposizione_tavoli_${event.name}.pdf`);
         }
-    };
+
+    } catch (error) {
+        console.error("Errore durante la generazione del PDF:", error);
+        alert("Si è verificato un errore durante la creazione del PDF. Controlla la console per maggiori dettagli.");
+    } finally {
+        setShowExportMenu(false);
+    }
+};
 
 
     const handleAddTable = async (tableName, tableCapacity, tableShape) => {
