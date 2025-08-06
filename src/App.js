@@ -4,7 +4,6 @@ import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, creat
 import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, doc, updateDoc, writeBatch, where, getDocs, deleteDoc, orderBy } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import seatzenLogo from './logos/seatzen-logo.png';
 
 
 // --- Author: I Luminari SRLS - www.iluminari3d.com ---
@@ -1062,6 +1061,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
     const [showClearListConfirm, setShowClearListConfirm] = useState(false);
     const [isClearingList, setIsClearingList] = useState(false);
     const [isAddingFamily, setIsAddingFamily] = useState(false);
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     useEffect(() => {
         function handleClickOutside(event) {
             if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
@@ -1117,79 +1117,67 @@ function EventView({ event, db, user, onDeleteEvent }) {
         );
     }
 
-    const handleExportPdf = (type) => {
-        try {
-            const doc = new jsPDF();
+    const handleExportPdf = async (type) => {
+    setIsExportingPdf(true); // <-- ATTIVIAMO IL CARICAMENTO
+    try {
+        await new Promise(resolve => {
+            const img = new Image();
+            img.src = '/logos/seatzen-logo.png'; 
             
-            // --- INIZIO PERSONALIZZAZIONE ---
-
-            // 1. Aggiungi il logo al PDF
-            // Parametri: (file_logo, formato, x, y, larghezza, altezza)
-            // Lo posizioniamo in alto a destra.
-            doc.addImage(seatzenLogo, 'PNG', 150, 8, 45, 12);
-
-            // 2. Imposta il colore del testo personalizzato (es. blu)
-            const brandColor = '#2563eb'; // <-- CAMBIA QUESTO con il colore della tua app
-            doc.setTextColor(brandColor);
-
-            // --- FINE PERSONALIZZAZIONE ---
-            
-            // Titolo principale del documento
-            const title = `${event.name}`;
-            doc.setFont(undefined, 'bold'); // Applica il grassetto
-            doc.text(title, 14, 15);
-
-            // Data dell'evento (sottotitolo)
-            doc.setFont(undefined, 'normal'); // Togli il grassetto
-            doc.setTextColor('#6b7280'); // Grigio per il testo secondario
-            doc.text(new Date(event.date).toLocaleDateString('it-IT'), 14, 22);
-            
-            const tableOptions = {
-                startY: 35, // Abbassiamo la tabella per fare spazio al logo e ai titoli
-                styles: {
-                    font: 'helvetica', // Usiamo un font standard e pulito
-                    cellPadding: 2,
-                },
-                headStyles: {
-                    fillColor: brandColor, // Colore personalizzato per l'intestazione
-                    textColor: '#ffffff',   // Testo bianco
-                    fontStyle: 'bold',
-                },
-                alternateRowStyles: {
-                    fillColor: '#f3f4f6' // Grigio chiaro per le righe alternate
+            img.onload = () => {
+                // ... (tutto il codice per generare il PDF rimane identico) ...
+                const doc = new jsPDF();
+                doc.addImage(img, 'PNG', 150, 8, 45, 12);
+                const brandColor = '#2563eb';
+                doc.setTextColor(brandColor);
+                const title = `${event.name}`;
+                doc.setFont(undefined, 'bold');
+                doc.text(title, 14, 15);
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor('#6b7280');
+                doc.text(new Date(event.date).toLocaleDateString('it-IT'), 14, 22);
+                const tableOptions = {
+                    startY: 35,
+                    styles: { font: 'helvetica', cellPadding: 2 },
+                    headStyles: { fillColor: brandColor, textColor: '#ffffff', fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: '#f3f4f6' }
+                };
+                if (type === 'guests') {
+                    const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
+                    const body = people.map(p => {
+                        const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
+                        const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
+                        return [p.name, groupName, tableName];
+                    });
+                    autoTable(doc, { ...tableOptions, head, body });
+                    doc.save(`lista_${activeSection}_${event.name}.pdf`);
+                } else if (type === 'tables') {
+                    const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
+                    const body = tables.map(t => {
+                        const assigned = people.filter(p => p.tableId === t.id);
+                        const assignedNames = assigned.map(p => p.name).join('\n');
+                        return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
+                    });
+                    autoTable(doc, { ...tableOptions, head, body });
+                    doc.save(`disposizione_tavoli_${event.name}.pdf`);
                 }
+                resolve();
             };
+            img.onerror = () => {
+                alert("Impossibile caricare il logo per il PDF.");
+                console.error("Errore nel caricamento di /logos/seatzen-logo.png");
+                resolve();
+            };
+        });
 
-            if (type === 'guests') {
-                const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
-                const body = people.map(p => {
-                    const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
-                    const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
-                    return [p.name, groupName, tableName];
-                });
-
-                autoTable(doc, { ...tableOptions, head, body });
-                doc.save(`lista_${activeSection}_${event.name}.pdf`);
-
-            } else if (type === 'tables') {
-                const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
-                const body = tables.map(t => {
-                    const assigned = people.filter(p => p.tableId === t.id);
-                    const assignedNames = assigned.map(p => p.name).join('\n');
-                    return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
-                });
-                
-                autoTable(doc, { ...tableOptions, head, body });
-                doc.save(`disposizione_tavoli_${event.name}.pdf`);
-            }
-
-        } catch (error) {
-            console.error("Errore durante la generazione del PDF:", error);
-            alert("Si è verificato un errore durante la creazione del PDF. Controlla la console per maggiori dettagli.");
-        } finally {
-            setShowExportMenu(false);
-        }
-    };
+    } catch (error) {
+        console.error("Errore durante la generazione del PDF:", error);
+        alert("Si è verificato un errore durante la creazione del PDF.");
+    } finally {
+        setShowExportMenu(false);
+        setIsExportingPdf(false); // <-- DISATTIVIAMO IL CARICAMENTO
+    }
+};
 
 
     const handleAddTable = async (tableName, tableCapacity, tableShape) => {
@@ -1517,17 +1505,43 @@ function EventView({ event, db, user, onDeleteEvent }) {
                     <h1 style={{ fontFamily: 'Lora, serif' }} className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">{event.name}</h1>
 					<div className="flex items-center space-x-2">
                         <div className="relative" ref={exportMenuRef}>
-                            <button onClick={() => setShowExportMenu(!showExportMenu)} className="flex items-center bg-green-600 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-green-700 transition-colors">
-                                <ExportIcon className="h-4 w-4 mr-2" />
-                                Esporta PDF
-                            </button>
-                            {showExportMenu && (
-                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-20">
-                                    <a href="#" onClick={(e) => {e.preventDefault(); handleExportPdf('guests')}} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">Lista Invitati/Staff</a>
-                                    <a href="#" onClick={(e) => {e.preventDefault(); handleExportPdf('tables')}} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">Disposizione Tavoli</a>
-                                </div>
-                            )}
-                        </div>
+    <button 
+        onClick={() => setShowExportMenu(!showExportMenu)} 
+        disabled={isExportingPdf} // Disabilita il pulsante durante l'esportazione
+        className="flex items-center bg-green-600 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed"
+    >
+        {isExportingPdf ? (
+            // Mostra la rotella di caricamento
+            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        ) : (
+            // Mostra l'icona normale
+            <ExportIcon className="h-4 w-4 mr-2" />
+        )}
+        {isExportingPdf ? 'Esportazione...' : 'Esporta PDF'}
+    </button>
+
+    {showExportMenu && (
+        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-20">
+            <a 
+                href="#" 
+                onClick={(e) => { e.preventDefault(); if (!isExportingPdf) handleExportPdf('guests'); }} 
+                className={`block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 ${isExportingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+                Lista Invitati/Staff
+            </a>
+            <a 
+                href="#" 
+                onClick={(e) => { e.preventDefault(); if (!isExportingPdf) handleExportPdf('tables'); }}
+                className={`block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 ${isExportingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+                Disposizione Tavoli
+            </a>
+        </div>
+    )}
+</div>
 						<button onClick={() => setShowArrangeOptions(true)} className="flex items-center bg-blue-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-blue-600 transition-colors">
 							<MagicWandIcon className="h-4 w-4 mr-2" />
 							Auto-Disponi
@@ -1865,5 +1879,6 @@ function App() {
 }
 
 export default App;
+
 
 
