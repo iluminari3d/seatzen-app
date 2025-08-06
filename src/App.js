@@ -3,7 +3,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, doc, updateDoc, writeBatch, where, getDocs, deleteDoc, orderBy } from 'firebase/firestore';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// MODIFICA 1: Importiamo autoTable come una funzione
+import autoTable from 'jspdf-autotable';
 
 
 // --- Author: I Luminari SRLS - www.iluminari3d.com ---
@@ -1118,38 +1119,20 @@ function EventView({ event, db, user, onDeleteEvent }) {
         );
     }
 
-    // --- CODICE MODIFICATO ---
-    // Ho riscritto questa funzione per essere più robusta e gestire meglio i caratteri speciali.
     const handleExportPdf = (type) => {
         try {
             const doc = new jsPDF();
-            
-            // --- NOTA SUL SUPPORTO FONT ---
-            // jsPDF ha un supporto limitato per i caratteri Unicode (come à, è, é, etc.) con i suoi
-            // font predefiniti. Per un supporto completo, sarebbe necessario incorporare un font 
-            // personalizzato che contenga i glifi necessari (ad es. un file .ttf).
-            // La procedura sarebbe simile a questa:
-            //
-            // import myFont from './path/to/MyFont-Regular.ttf';
-            // doc.addFileToVFS('MyFont-Regular.ttf', myFont);
-            // doc.addFont('MyFont-Regular.ttf', 'MyFont', 'normal');
-            // doc.setFont('MyFont');
-            //
-            // E poi passare gli stili del font a autoTable:
-            // styles: { font: 'MyFont' }
-
             const title = `${event.name} - ${new Date(event.date).toLocaleDateString('it-IT')}`;
             doc.text(title, 14, 15);
             
-            // Opzioni comuni per entrambe le tabelle PDF per uno stile consistente
             const tableOptions = {
                 startY: 25,
                 styles: {
-                    font: 'helvetica', // Usiamo esplicitamente un font standard.
+                    font: 'helvetica',
                     cellPadding: 2,
                 },
                 headStyles: {
-                    fillColor: [41, 128, 185], // Un blu per l'intestazione
+                    fillColor: [41, 128, 185],
                     textColor: 255,
                     fontStyle: 'bold',
                 },
@@ -1164,7 +1147,8 @@ function EventView({ event, db, user, onDeleteEvent }) {
                     return [p.name, groupName, tableName];
                 });
 
-                doc.autoTable({ ...tableOptions, head, body });
+                // MODIFICA 2: Chiamiamo autoTable come funzione, passando il documento
+                autoTable(doc, { ...tableOptions, head, body });
                 doc.save(`lista_${activeSection}_${event.name}.pdf`);
 
             } else if (type === 'tables') {
@@ -1176,7 +1160,8 @@ function EventView({ event, db, user, onDeleteEvent }) {
                     return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
                 });
                 
-                doc.autoTable({ ...tableOptions, head, body });
+                // MODIFICA 2: Chiamiamo autoTable come funzione, passando il documento
+                autoTable(doc, { ...tableOptions, head, body });
                 doc.save(`disposizione_tavoli_${event.name}.pdf`);
             }
 
