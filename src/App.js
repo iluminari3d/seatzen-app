@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, creat
 import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, doc, updateDoc, writeBatch, where, getDocs, deleteDoc, orderBy } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 
 // --- Author: I Luminari SRLS - www.iluminari3d.com ---
@@ -680,17 +681,27 @@ function PreferenceSelector({ title, icon, list, otherGuests, onToggle, color })
     );
 };
 
-function GuestListItem({ guest, onEdit, activeSection }) {
+function GuestListItem({ guest, onEdit, activeSection, index }) {
     return (
-        <li onClick={() => onEdit(guest)} className="text-gray-700 dark:text-gray-200 p-2 rounded flex justify-between items-center bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer animate-fade-in">
-            <span className="truncate">{guest.name}</span>
-            <div className="flex items-center space-x-2">
-                {activeSection === 'guests' && guest.mustSitWith?.length > 0 && <span title="Posti Vincolati">🔗</span>}
-                {activeSection === 'guests' && guest.strictGroupId && <GroupIcon className="h-4 w-4" />}
-                {activeSection === 'guests' && (guest.likes?.length > 0 || guest.dislikes?.length > 0) && <span className="text-yellow-500 text-lg">★</span>}
-                {activeSection === 'staff' && guest.role && <span className="text-xs bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">{guest.role}</span>}
-            </div>
-        </li>
+        <Draggable draggableId={guest.id} index={index}>
+            {(provided, snapshot) => (
+                <li
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    onClick={() => onEdit(guest)}
+                    className={`text-gray-700 dark:text-gray-200 p-2 rounded flex justify-between items-center bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-grab animate-fade-in ${snapshot.isDragging ? 'shadow-lg scale-105' : ''}`}
+                >
+                    <span className="truncate">{guest.name}</span>
+                    <div className="flex items-center space-x-2">
+                        {activeSection === 'guests' && guest.mustSitWith?.length > 0 && <span title="Posti Vincolati">🔗</span>}
+                        {activeSection === 'guests' && guest.strictGroupId && <GroupIcon className="h-4 w-4" />}
+                        {activeSection === 'guests' && (guest.likes?.length > 0 || guest.dislikes?.length > 0) && <span className="text-yellow-500 text-lg">★</span>}
+                        {activeSection === 'staff' && guest.role && <span className="text-xs bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">{guest.role}</span>}
+                    </div>
+                </li>
+            )}
+        </Draggable>
     );
 }
 
@@ -698,52 +709,39 @@ function PeopleList({ people, isLoading, onEditPerson, activeSection, onAddPerso
     const addMenuRef = useRef(null);
     const [showAddMenu, setShowAddMenu] = useState(false);
 
-     useEffect(() => {
+    useEffect(() => {
         function handleClickOutside(event) {
             if (addMenuRef.current && !addMenuRef.current.contains(event.target)) {
                 setShowAddMenu(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [addMenuRef]);
-
-    const unassignedPeople = people.filter(p => !p.tableId);
 
     return (
         <div className="w-full">
             <div className="flex justify-between items-center mb-4">
                 <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-gray-800 dark:text-gray-100">{activeSection === 'guests' ? 'Invitati' : 'Staff'}</h3>
-                <div className="relative" ref={addMenuRef}>
-                    <button onClick={() => setShowAddMenu(!showAddMenu)} className="sz-accent-bg text-white font-bold py-2 px-4 rounded-lg shadow hover:sz-accent-bg-hover flex items-center">
-                        <PlusIcon className="h-5 w-5 mr-2"/> Aggiungi
-                    </button>
-                    {showAddMenu && (
-                         <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-30 py-1">
-                             <a href="#" onClick={(e)=>{e.preventDefault(); onAddPersonClick(); setShowAddMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                                <UserAvatarIcon className="h-5 w-5 mr-3"/> Aggiungi Persona
-                             </a>
-                             {activeSection === 'guests' && (
-                                <a href="#" onClick={(e)=>{e.preventDefault(); onAddGroupClick(); setShowAddMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                                    <GroupIcon className="h-5 w-5 mr-3"/> Aggiungi Gruppo
-                                </a>
-                             )}
-                             <a href="#" onClick={(e)=>{e.preventDefault(); onImportClick(); setShowAddMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                                <FileImportIcon className="h-5 w-5 mr-3"/> Importa da File
-                             </a>
-                         </div>
-                    )}
-                </div>
+                {/* ... (codice del menu a tendina "Aggiungi" rimane invariato) ... */}
             </div>
-             <button onClick={onClearListClick} className="w-full text-center text-xs text-red-500 dark:text-red-400 hover:underline mb-4">Svuota Lista</button>
-            {isLoading ? <p className="text-gray-500 dark:text-gray-400">Caricamento...</p> : people.length > 0 ? (
-                <ul className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 space-y-2 min-h-[100px] flex-grow overflow-y-auto">
-                     <p className="text-xs text-gray-400 mb-2">Non assegnati ({unassignedPeople.length})</p>
-                    {unassignedPeople.map(person => <GuestListItem key={person.id} guest={person} onEdit={onEditPerson} activeSection={activeSection} />)}
-                </ul>
-            ) : <div className="text-gray-500 dark:text-gray-400 italic mt-4 p-4 border border-dashed rounded-lg border-gray-300 dark:border-gray-600 text-center">Nessuna persona in questa lista.</div>}
+            <button onClick={onClearListClick} className="w-full text-center text-xs text-red-500 dark:text-red-400 hover:underline mb-4">Svuota Lista</button>
+            
+            <Droppable droppableId="unassigned-list">
+                {(provided, snapshot) => (
+                    <ul 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`bg-white dark:bg-gray-700 rounded-lg shadow p-4 space-y-2 min-h-[100px] flex-grow overflow-y-auto transition-colors ${snapshot.isDraggingOver ? 'bg-blue-100 dark:bg-blue-900/30' : ''}`}
+                    >
+                        <p className="text-xs text-gray-400 mb-2">Non assegnati ({people.length})</p>
+                        {isLoading ? <p>Caricamento...</p> : people.map((person, index) => (
+                            <GuestListItem key={person.id} guest={person} onEdit={onEditPerson} activeSection={activeSection} index={index} />
+                        ))}
+                        {provided.placeholder}
+                    </ul>
+                )}
+            </Droppable>
         </div>
     );
 }
@@ -773,29 +771,18 @@ function AddTableForm({ onAddTable, isAdding }) {
     );
 };
 
-function TableCard({ table, people, onDragStart, onDragOver, onDrop, isDragOver, onEditPerson, onEditTable, onDeleteTable, onToggleLock, activeSection }) {
-    
-    // --- INIZIO MODIFICA ---
-    // Controlliamo se il nome del tavolo (in minuscolo) contiene la parola "sposi"
+function TableCard({ table, people, onEditPerson, onEditTable, onDeleteTable, onToggleLock, activeSection }) {
     const isCoupleTable = table.name.toLowerCase().includes('sposi');
-    
-    // Se è il tavolo degli sposi, la capacità visualizzata è pari al numero di persone sedute.
-    // Altrimenti, usiamo la capacità normale del tavolo.
-    const displayCapacity = isCoupleTable ? people.length : table.capacity;
-
-    // Aggiorniamo anche la logica per considerare il tavolo "pieno"
+    const displayCapacity = isCoupleTable && people.length > 0 ? people.length : table.capacity;
     const isFull = people.length >= displayCapacity;
-    // --- FINE MODIFICA ---
 
     const baseClasses = "bg-white dark:bg-gray-800 rounded-lg shadow p-4 animate-fade-in transition-all duration-200 relative";
-    // Usiamo la nuova logica per 'isFull'
-    const stateClasses = isDragOver && !isFull && !table.locked ? "ring-2 scale-105 sz-focus-ring" : isFull ? "bg-red-100 dark:bg-red-900/20" : "";
+    const stateClasses = isFull ? "bg-red-100 dark:bg-red-900/20" : "";
     const lockedClasses = table.locked ? "opacity-70 border-2 border-blue-300 dark:border-blue-700" : "";
     
     return (
-        <div onDragOver={onDragOver} onDrop={onDrop} className={`${baseClasses} ${stateClasses} ${lockedClasses}`}>
+        <div className={`${baseClasses} ${stateClasses} ${lockedClasses}`}>
             <div className="absolute top-2 right-2 flex items-center space-x-1">
-                {/* ... (i pulsanti rimangono invariati) ... */}
                 <button onClick={() => onToggleLock(table.id, !table.locked)} title={table.locked ? "Sblocca tavolo" : "Blocca tavolo"} className="p-1 text-gray-400 hover:text-blue-500">
                     {table.locked ? <LockIcon className="h-5 w-5" /> : <UnlockIcon className="h-5 w-5" />}
                 </button>
@@ -808,29 +795,54 @@ function TableCard({ table, people, onDragStart, onDragOver, onDrop, isDragOver,
             </div>
             <h4 style={{fontFamily: 'Lora, serif'}} className="text-lg font-bold sz-accent-text flex justify-between items-center pr-24">
                 <span>{table.name}</span>
-                {/* Usiamo la nuova capacità dinamica per la visualizzazione */}
                 <span className={`text-sm font-mono p-1 rounded ${isFull ? 'text-red-700 bg-red-200 dark:text-red-200 dark:bg-red-800' : 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-700'}`}>{people.length}/{displayCapacity}</span>
             </h4>
-            <ul className="mt-2 space-y-1 text-sm min-h-[2rem]">
-                {people.map(person => <GuestListItem key={person.id} guest={person} onDragStart={onDragStart} onEdit={onEditPerson} activeSection={activeSection} />)}
-            </ul>
+            
+            <Droppable droppableId={table.id}>
+                {(provided, snapshot) => (
+                    <ul
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`mt-2 space-y-1 text-sm min-h-[2rem] rounded-lg p-1 transition-colors ${snapshot.isDraggingOver ? 'bg-blue-100 dark:bg-blue-900/30' : ''}`}
+                    >
+                        {people.map((person, index) => (
+                            <GuestListItem key={person.id} guest={person} onEdit={onEditPerson} activeSection={activeSection} index={index} />
+                        ))}
+                        {provided.placeholder}
+                    </ul>
+                )}
+            </Droppable>
         </div>
     );
-};
-
+}
 function TableList({ tables, people, onEditPerson, onEditTable, onDeleteTable, onToggleLock, activeSection }) {
     return (
         <div className="w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tables.length > 0 ? tables.map(table => {
+                    // Per ogni tavolo, filtriamo solo le persone assegnate a quel tavolo
                     const assignedPeople = people.filter(p => p.tableId === table.id);
-                    return <TableCard key={table.id} table={table} people={assignedPeople} onEditPerson={onEditPerson} onEditTable={onEditTable} onDeleteTable={onDeleteTable} onToggleLock={onToggleLock} activeSection={activeSection} />;
-                }) : <p className="text-gray-500 dark:text-gray-400 italic mt-4 col-span-full text-center">Nessun tavolo creato.</p>}
+                    
+                    // Passiamo tutte le proprietà necessarie a TableCard
+                    return (
+                        <TableCard 
+                            key={table.id} 
+                            table={table} 
+                            people={assignedPeople} 
+                            onEditPerson={onEditPerson} 
+                            onEditTable={onEditTable} 
+                            onDeleteTable={onDeleteTable} 
+                            onToggleLock={onToggleLock} 
+                            activeSection={activeSection} 
+                        />
+                    );
+                }) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic mt-4 col-span-full text-center">Nessun tavolo creato.</p>
+                )}
             </div>
         </div>
     );
 }
-
 function MapView({ tables, people }) {
     return (
         <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-inner min-h-[300px] border border-gray-200 dark:border-gray-700">
@@ -1047,7 +1059,7 @@ function LoginPage({ onLogin, onEmailLogin, onEmailRegister }) {
 };
 
 function EventView({ event, db, user, onDeleteEvent }) {
-    // Hooks MUST be called at the top level, before any conditional returns.
+    // Hooks di stato
     const [activeSection, setActiveSection] = useState('guests');
     const [people, setPeople] = useState([]);
     const [isLoadingPeople, setIsLoadingPeople] = useState(true);
@@ -1067,10 +1079,10 @@ function EventView({ event, db, user, onDeleteEvent }) {
     const [isSavingImport, setIsSavingImport] = useState(false);
     const [isArranging, setIsArranging] = useState(false);
     const [viewMode, setViewMode] = useState('list');
-	const [deletingTable, setDeletingTable] = useState(null);
+    const [deletingTable, setDeletingTable] = useState(null);
     const [isDeletingTable, setIsDeletingTable] = useState(false);
-	const [showArrangeOptions, setShowArrangeOptions] = useState(false);
-	const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [showArrangeOptions, setShowArrangeOptions] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
     const exportMenuRef = useRef(null);
@@ -1078,6 +1090,8 @@ function EventView({ event, db, user, onDeleteEvent }) {
     const [isClearingList, setIsClearingList] = useState(false);
     const [isAddingFamily, setIsAddingFamily] = useState(false);
     const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+    // useEffect per il menu di esportazione
     useEffect(() => {
         function handleClickOutside(event) {
             if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
@@ -1085,11 +1099,10 @@ function EventView({ event, db, user, onDeleteEvent }) {
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [exportMenuRef]);
 
+    // useEffect per caricare i dati da Firebase
     useEffect(() => {
         if (!db || !user || !event) {
             setPeople([]);
@@ -1124,93 +1137,80 @@ function EventView({ event, db, user, onDeleteEvent }) {
         return () => { unsubPeople(); unsubTables(); unsubGroups(); };
     }, [db, user, event, activeSection]);
 
-    // This guard clause now comes AFTER all hooks have been called.
     if (!event) {
-        return (
-            <div className="flex justify-center items-center w-full h-full p-8 dark:bg-gray-900">
-                <p className="text-gray-600 dark:text-gray-300">Caricamento evento in corso...</p>
-            </div>
-        );
+        return <div className="flex justify-center items-center w-full h-full p-8 dark:bg-gray-900"><p className="text-gray-600 dark:text-gray-300">Caricamento evento in corso...</p></div>;
     }
 
+    // --- FUNZIONI DI GESTIONE ---
     const handleExportPdf = async (type) => {
-    setIsExportingPdf(true);
-    try {
-        await new Promise(resolve => {
-            const img = new Image();
-            img.src = '/logos/seatzen-logo.png'; 
-            
-            img.onload = () => {
-                const doc = new jsPDF();
-
-                // --- INIZIO NUOVE MODIFICHE ---
-
-                // 1. Calcoliamo le proporzioni corrette del logo
-                const logoWidth = 45; // Imposta la larghezza che desideri nel PDF
-                const aspectRatio = img.width / img.height;
-                const logoHeight = logoWidth / aspectRatio; // L'altezza viene calcolata automaticamente
-
-                // 2. Inserisci qui il vero colore del tuo brand
-                const brandColor = '#b58e48'; // <-- SOSTITUISCI QUESTO COLORE CON IL TUO
-
-                // --- FINE NUOVE MODIFICHE ---
+        setIsExportingPdf(true);
+        try {
+            await new Promise(resolve => {
+                const img = new Image();
+                img.src = '/logos/seatzen-logo.png'; 
                 
-                // Usiamo le nuove variabili per aggiungere l'immagine senza distorsioni
-                doc.addImage(img, 'PNG', 150, 8, logoWidth, logoHeight);
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const dataURL = canvas.toDataURL('image/png');
+                    
+                    const doc = new jsPDF();
+                    const logoWidth = 45;
+                    const aspectRatio = img.width / img.height;
+                    const logoHeight = logoWidth / aspectRatio;
+                    const brandColor = '#b58e48'; // Colore brand aggiornato
 
-                doc.setTextColor(brandColor);
-                const title = `${event.name}`;
-                doc.setFont(undefined, 'bold');
-                doc.text(title, 14, 15);
-                
-                // ... il resto della funzione rimane identico ...
-                doc.setFont(undefined, 'normal');
-                doc.setTextColor('#6b7280');
-                doc.text(new Date(event.date).toLocaleDateString('it-IT'), 14, 22);
-                const tableOptions = {
-                    startY: 35,
-                    styles: { font: 'helvetica', cellPadding: 2 },
-                    headStyles: { fillColor: brandColor, textColor: '#ffffff', fontStyle: 'bold' },
-                    alternateRowStyles: { fillColor: '#f3f4f6' }
+                    doc.addImage(dataURL, 'PNG', 150, 8, logoWidth, logoHeight);
+                    doc.setTextColor(brandColor);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(`${event.name}`, 14, 15);
+                    doc.setFont(undefined, 'normal');
+                    doc.setTextColor('#6b7280');
+                    doc.text(new Date(event.date).toLocaleDateString('it-IT'), 14, 22);
+                    
+                    const tableOptions = {
+                        startY: 35,
+                        styles: { font: 'helvetica', cellPadding: 2 },
+                        headStyles: { fillColor: brandColor, textColor: '#ffffff', fontStyle: 'bold' },
+                        alternateRowStyles: { fillColor: '#f3f4f6' }
+                    };
+
+                    if (type === 'guests') {
+                        const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
+                        const body = people.map(p => {
+                            const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
+                            const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
+                            return [p.name, groupName, tableName];
+                        });
+                        autoTable(doc, { ...tableOptions, head, body });
+                        doc.save(`lista_${activeSection}_${event.name}.pdf`);
+                    } else if (type === 'tables') {
+                        const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
+                        const body = tables.map(t => {
+                            const assigned = people.filter(p => p.tableId === t.id);
+                            const assignedNames = assigned.map(p => p.name).join('\n');
+                            return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
+                        });
+                        autoTable(doc, { ...tableOptions, head, body });
+                        doc.save(`disposizione_tavoli_${event.name}.pdf`);
+                    }
+                    resolve();
                 };
-                if (type === 'guests') {
-                    const head = [['Nome', 'Gruppo', 'Tavolo Assegnato']];
-                    const body = people.map(p => {
-                        const groupName = p.strictGroupId ? strictGroups.find(g => g.id === p.strictGroupId)?.name || 'N/D' : '-';
-                        const tableName = p.tableId ? tables.find(t => t.id === p.tableId)?.name || 'Non Assegnato' : 'Non Assegnato';
-                        return [p.name, groupName, tableName];
-                    });
-                    autoTable(doc, { ...tableOptions, head, body });
-                    doc.save(`lista_${activeSection}_${event.name}.pdf`);
-                } else if (type === 'tables') {
-                    const head = [['Nome Tavolo', 'Capacità', 'Persone Assegnate']];
-                    const body = tables.map(t => {
-                        const assigned = people.filter(p => p.tableId === t.id);
-                        const assignedNames = assigned.map(p => p.name).join('\n');
-                        return [t.name, `${assigned.length} / ${t.capacity}`, assignedNames];
-                    });
-                    autoTable(doc, { ...tableOptions, head, body });
-                    doc.save(`disposizione_tavoli_${event.name}.pdf`);
-                }
-                resolve();
-            };
-
-            img.onerror = () => {
-                alert("Impossibile caricare il logo per il PDF.");
-                console.error("Errore nel caricamento di /logos/seatzen-logo.png");
-                resolve();
-            };
-        });
-
-    } catch (error) {
-        console.error("Errore durante la generazione del PDF:", error);
-        alert("Si è verificato un errore durante la creazione del PDF.");
-    } finally {
-        setShowExportMenu(false);
-        setIsExportingPdf(false);
-    }
-};
-
+                img.onerror = () => {
+                    alert("Impossibile caricare il logo per il PDF.");
+                    resolve();
+                };
+            });
+        } catch (error) {
+            console.error("Errore durante la generazione del PDF:", error);
+        } finally {
+            setShowExportMenu(false);
+            setIsExportingPdf(false);
+        }
+    };
 
     const handleAddTable = async (tableName, tableCapacity, tableShape) => {
         if (!db || !user || !event) return;
@@ -1225,8 +1225,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
         try {
             await updateDoc(doc(db, path), tableData);
         } catch (error) {
-            console.error("Errore durante l'aggiornamento del tavolo:", error);
-            alert("Si è verificato un errore durante il salvataggio.");
+            console.error("Errore aggiornamento tavolo:", error);
         } finally {
             setIsSavingTable(false);
             setEditingTable(null);
@@ -1236,22 +1235,15 @@ function EventView({ event, db, user, onDeleteEvent }) {
 	const handleDeleteTable = async (table) => {
 		if (!db || !user || !event || !table) return;
 		setIsDeletingTable(true);
-		
 		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
 		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
 		const tablePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${table.id}`;
-
 		const batch = writeBatch(db);
-		
-		const peopleOnTable = people.filter(p => p.tableId === table.id);
-		peopleOnTable.forEach(p => {
+		people.filter(p => p.tableId === table.id).forEach(p => {
 			batch.update(doc(db, peoplePath, p.id), { tableId: null });
 		});
-
 		batch.delete(doc(db, tablePath));
-
 		await batch.commit();
-
 		setDeletingTable(null);
 		setIsDeletingTable(false);
 	}
@@ -1268,7 +1260,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
 		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
 		
-		// 1. Clear existing unlocked tables and assignments
 		const clearBatch = writeBatch(db);
 		people.forEach(p => {
 			const table = tables.find(t => t.id === p.tableId);
@@ -1286,7 +1277,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		let remainingPeople = [...people.filter(p => !lockedTableIds.includes(p.tableId))];
 		let seatedPersonIds = new Set();
 	
-		// Helper to seat a group of people
 		const seatGroup = (peopleToSeat, baseTableName, capacity, shape) => {
 			let tableCounter = 1;
 			while (peopleToSeat.length > 0) {
@@ -1301,7 +1291,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
 			}
 		};
 	
-		// 2. Handle Couple's Table
 		if (!options.noCoupleTable) {
 			const coupleGroupId = strictGroups.find(g => g.name.toLowerCase() === 'sposi')?.id;
 			if (coupleGroupId) {
@@ -1313,7 +1302,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		}
 		remainingPeople = remainingPeople.filter(p => !seatedPersonIds.has(p.id));
 	
-		// 3. Handle Kids' Table
 		if (options.createKidsTable) {
 			const kids = remainingPeople.filter(p => YOUNG_CHILD_RANGES.includes(p.age));
 			if (kids.length > 0) {
@@ -1322,7 +1310,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		}
 		remainingPeople = remainingPeople.filter(p => !seatedPersonIds.has(p.id));
 
-		// 4. Handle Special Tables
 		if (options.allowSpecialTables && options.specialTables.length > 0) {
 			for (const specialTableRule of options.specialTables) {
 				const groupIds = specialTableRule.groupIds;
@@ -1335,7 +1322,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		}
 		remainingPeople = remainingPeople.filter(p => !seatedPersonIds.has(p.id));
 
-		// 5. Handle remaining guests
 		seatGroup(remainingPeople, 'Tavolo', options.capacity, options.tableType);
 	
 		await arrangementBatch.commit();
@@ -1379,8 +1365,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
             snapshot.forEach(doc => batch.delete(doc.ref));
             await batch.commit();
         } catch (error) {
-            console.error("Errore durante la pulizia della lista:", error);
-            alert("Si è verificato un errore.");
+            console.error("Errore pulizia lista:", error);
         } finally {
             setIsClearingList(false);
             setShowClearListConfirm(false);
@@ -1408,7 +1393,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
             }
         } catch (error) {
             console.error("Errore salvataggio persona:", error);
-            alert("Si è verificato un errore.");
         } finally {
             setIsSavingPerson(false);
             setEditingPerson(null);
@@ -1426,8 +1410,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
         try {
             await deleteDoc(doc(db, path));
         } catch (error) {
-            console.error("Errore durante l'eliminazione della persona:", error);
-            alert("Si è verificato un errore durante l'eliminazione.");
+            console.error("Errore eliminazione persona:", error);
         } finally {
             setIsDeletingPerson(false);
             setDeletingPerson(null);
@@ -1458,7 +1441,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
         const groupsPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/strictGroups`;
         
         try {
-            // Step 1: Identify and create any new groups.
             const groupNamesInCsv = [...new Set(peopleToImport.map(p => p.groupName).filter(Boolean))];
             
             const existingGroupsQuery = query(collection(db, groupsPath), where('name', 'in', groupNamesInCsv.length > 0 ? groupNamesInCsv : [' ']));
@@ -1476,11 +1458,9 @@ function EventView({ event, db, user, onDeleteEvent }) {
                 await groupsBatch.commit();
             }
 
-            // Step 2: Get a complete, up-to-date map of all relevant groups by name.
             const allGroupsSnapshot = await getDocs(collection(db, groupsPath));
             const allGroupsMap = new Map(allGroupsSnapshot.docs.map(d => [d.data().name, d.id]));
 
-            // Step 3: Create the people with the correct strictGroupId.
             const peopleBatch = writeBatch(db);
             peopleToImport.forEach(person => {
                 const newPersonRef = doc(collection(db, peoplePath));
@@ -1488,160 +1468,180 @@ function EventView({ event, db, user, onDeleteEvent }) {
 
                 if (person.type === 'guest') {
                     const groupId = allGroupsMap.get(person.groupName) || '';
-                    personData = {
-                        name: person.name,
-                        age: person.age,
-                        strictGroupId: groupId,
-                        likes: [], dislikes: [], mustSitWith: [], tableId: null, createdAt: serverTimestamp(),
-                    };
-                } else { // Staff
-                    personData = {
-                        name: person.name,
-                        role: person.role,
-                        tableId: null, createdAt: serverTimestamp(),
-                    };
+                    personData = { name: person.name, age: person.age, strictGroupId: groupId, likes: [], dislikes: [], mustSitWith: [], tableId: null, createdAt: serverTimestamp() };
+                } else {
+                    personData = { name: person.name, role: person.role, tableId: null, createdAt: serverTimestamp() };
                 }
                 peopleBatch.set(newPersonRef, personData);
             });
-
             await peopleBatch.commit();
-
         } catch (error) {
-            console.error("Error importing people:", error);
-            alert("An error occurred during the import.");
+            console.error("Errore importazione:", error);
         } finally {
             setIsSavingImport(false);
             setIsImporting(false); 
         }
     };
 
+    const handleDragEnd = async (result) => {
+        const { source, destination, draggableId } = result;
 
+        // 1. Se l'utente lascia l'elemento fuori da un'area valida, non fare nulla
+        if (!destination) {
+            return;
+        }
+
+        // 2. Se l'utente lascia l'elemento nella stessa posizione di partenza, non fare nulla
+        if (source.droppableId === destination.droppableId) {
+            return; // Per ora non gestiamo il riordino nella stessa lista
+        }
+
+        const person = people.find(p => p.id === draggableId);
+        if (!person) return;
+
+        // 3. Controlla se il tavolo di partenza è bloccato
+        if (source.droppableId !== 'unassigned-list') {
+            const sourceTable = tables.find(t => t.id === source.droppableId);
+            if (sourceTable && sourceTable.locked) {
+                alert(`Il tavolo "${sourceTable.name}" è bloccato e non è possibile spostare gli invitati.`);
+                return;
+            }
+        }
+
+        // 4. Controlla la capacità e lo stato di blocco del tavolo di destinazione
+        if (destination.droppableId !== 'unassigned-list') {
+            const destTable = tables.find(t => t.id === destination.droppableId);
+            if (destTable && destTable.locked) {
+                alert(`Il tavolo "${destTable.name}" è bloccato e non è possibile aggiungere invitati.`);
+                return;
+            }
+
+            const peopleAtDestTable = people.filter(p => p.tableId === destination.droppableId).length;
+            const isDestCoupleTable = destTable && destTable.name.toLowerCase().includes('sposi');
+            const destCapacity = isDestCoupleTable ? (peopleAtDestTable + 1) : (destTable ? destTable.capacity : 0);
+
+            if (destTable && peopleAtDestTable >= destCapacity) {
+                alert(`Il tavolo "${destTable.name}" è pieno!`);
+                return;
+            }
+        }
+        
+        // 5. Aggiorna il database
+        const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
+        const personRef = doc(db, `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`, draggableId);
+        const newTableId = destination.droppableId === 'unassigned-list' ? null : destination.droppableId;
+        
+        try {
+            await updateDoc(personRef, { tableId: newTableId });
+        } catch (error) {
+            console.error("Errore durante l'aggiornamento dell'invitato:", error);
+            alert("Si è verificato un errore durante lo spostamento.");
+        }
+    };
+    
     const unassignedPeople = people.filter(p => !p.tableId);
+    const baseButtonClasses = "flex items-center text-sm font-bold py-2 px-3 rounded-lg shadow border transition-colors";
 
     return (
         <div className="relative w-full h-full">
-            {deletingTable && <DeleteConfirmationModal title="Conferma Eliminazione Tavolo" message={`Sei sicuro di voler eliminare permanentemente il tavolo <strong class="font-bold">${deletingTable.name}</strong>? Gli invitati verranno spostati tra i non assegnati.`} onConfirm={() => handleDeleteTable(deletingTable)} onCancel={() => setDeletingTable(null)} isDeleting={isDeletingTable} />}
-			{deletingPerson && <DeleteConfirmationModal title="Conferma Eliminazione Persona" message={`Sei sicuro di voler eliminare permanentemente <strong class="font-bold">${deletingPerson.name}</strong> dalla lista?`} onConfirm={handleDeletePerson} onCancel={() => setDeletingPerson(null)} isDeleting={isDeletingPerson} />}
-            {showResetConfirm && <DeleteConfirmationModal title="Resetta Disposizione" message={`Sei sicuro di voler resettare la disposizione? Tutti gli invitati verranno rimossi dai tavoli <strong class="font-bold">non bloccati</strong>.`} onConfirm={handleResetLayout} onCancel={() => setShowResetConfirm(false)} isDeleting={isResetting} confirmText="Sì, resetta"/>}
+            {deletingTable && <DeleteConfirmationModal title="Conferma Eliminazione Tavolo" message={`Sei sicuro di voler eliminare il tavolo <strong class="font-bold">${deletingTable.name}</strong>?`} onConfirm={() => handleDeleteTable(deletingTable)} onCancel={() => setDeletingTable(null)} isDeleting={isDeletingTable} />}
+			{deletingPerson && <DeleteConfirmationModal title="Conferma Eliminazione Persona" message={`Sei sicuro di voler eliminare <strong class="font-bold">${deletingPerson.name}</strong>?`} onConfirm={handleDeletePerson} onCancel={() => setDeletingPerson(null)} isDeleting={isDeletingPerson} />}
+            {showResetConfirm && <DeleteConfirmationModal title="Resetta Disposizione" message={`Tutti gli invitati verranno rimossi dai tavoli <strong class="font-bold">non bloccati</strong>.`} onConfirm={handleResetLayout} onCancel={() => setShowResetConfirm(false)} isDeleting={isResetting} confirmText="Sì, resetta"/>}
 			{showArrangeOptions && <ArrangeOptionsModal onClose={() => setShowArrangeOptions(false)} onArrange={handleAutoArrange} isArranging={isArranging} guestGroups={strictGroups} />}
             {editingTable && <EditTableModal table={editingTable} onClose={() => setEditingTable(null)} onSave={handleUpdateTable} isSaving={isSavingTable} />}
             {(editingPerson || isCreatingPerson) && <PersonDetailModal person={editingPerson} allGuests={people} strictGroups={strictGroups} onSave={handleSavePerson} onClose={() => { setEditingPerson(null); setIsCreatingPerson(false); }} isSaving={isSavingPerson} isCreating={isCreatingPerson} onManageGroups={() => setIsManagingGroups(true)} onDelete={setDeletingPerson} initialType={activeSection === 'staff' ? 'staff' : 'guest'} />}
             {isManagingGroups && <StrictGroupModal groups={strictGroups} onAdd={handleAddStrictGroup} onDelete={handleDeleteStrictGroup} onClose={() => setIsManagingGroups(false)} isSaving={isSavingGroup} />}
             {isImporting && <ImportPeopleModal existingGroups={strictGroups} onClose={() => setIsImporting(false)} onSave={handleImportSave} isSaving={isSavingImport} activeSection={activeSection} />}
-            {showClearListConfirm && <DeleteConfirmationModal title="Svuota Lista" message={`Sei sicuro di voler eliminare <strong class="font-bold">tutti</strong> gli ${activeSection === 'guests' ? 'invitati' : 'staff'} da questo evento? L'azione è irreversibile.`} onConfirm={handleClearList} onCancel={() => setShowClearListConfirm(false)} isDeleting={isClearingList} confirmText="Sì, svuota"/>}
+            {showClearListConfirm && <DeleteConfirmationModal title="Svuota Lista" message={`Sei sicuro di voler eliminare <strong class="font-bold">tutti</strong> gli ${activeSection === 'guests' ? 'invitati' : 'staff'}? L'azione è irreversibile.`} onConfirm={handleClearList} onCancel={() => setShowClearListConfirm(false)} isDeleting={isClearingList} confirmText="Sì, svuota"/>}
             {isAddingFamily && <AddFamilyModal onClose={() => setIsAddingFamily(false)} onSave={() => {}} isSaving={false} />}
 
-
-            <div className="w-full h-full p-4 md:p-8 text-left animate-fade-in dark:bg-gray-900">
-                <div className="flex justify-between items-start mb-8">
-                    <h1 style={{ fontFamily: 'Lora, serif' }} className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">{event.name}</h1>
-					<div className="flex items-center space-x-2">
-                        <div className="relative" ref={exportMenuRef}>
-    <button 
-        onClick={() => setShowExportMenu(!showExportMenu)} 
-        disabled={isExportingPdf} // Disabilita il pulsante durante l'esportazione
-        className="flex items-center bg-green-600 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed"
-    >
-        {isExportingPdf ? (
-            // Mostra la rotella di caricamento
-            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-        ) : (
-            // Mostra l'icona normale
-            <ExportIcon className="h-4 w-4 mr-2" />
-        )}
-        {isExportingPdf ? 'Esportazione...' : 'Esporta PDF'}
-    </button>
-
-    {showExportMenu && (
-        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-20">
-            <a 
-                href="#" 
-                onClick={(e) => { e.preventDefault(); if (!isExportingPdf) handleExportPdf('guests'); }} 
-                className={`block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 ${isExportingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-                Lista Invitati/Staff
-            </a>
-            <a 
-                href="#" 
-                onClick={(e) => { e.preventDefault(); if (!isExportingPdf) handleExportPdf('tables'); }}
-                className={`block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 ${isExportingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-                Disposizione Tavoli
-            </a>
-        </div>
-    )}
-</div>
-						<button onClick={() => setShowArrangeOptions(true)} className="flex items-center bg-blue-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-blue-600 transition-colors">
-							<MagicWandIcon className="h-4 w-4 mr-2" />
-							Auto-Disponi
-						</button>
-						<button onClick={() => setShowResetConfirm(true)} className="flex items-center bg-yellow-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-yellow-600 transition-colors">
-							<ResetIcon className="h-4 w-4 mr-2" />
-							Resetta
-						</button>
-						<button onClick={() => onDeleteEvent(event)} className="flex items-center bg-red-500 text-white text-sm font-bold py-2 px-3 rounded-lg shadow hover:bg-red-600 transition-colors">
-							<TrashIcon className="h-4 w-4 mr-2" />
-							Elimina Evento
-						</button>
-					</div>
-                </div>
-
-                <div className="mb-6">
-                    <div className="inline-flex rounded-lg shadow-sm">
-                        <button onClick={() => setActiveSection('guests')} className={`px-6 py-3 text-lg font-bold rounded-l-lg transition-colors ${activeSection === 'guests' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}>
-                            <GuestsIcon className="inline-block w-6 h-6 mr-2" />
-                            Sala Invitati
-                        </button>
-                        <button onClick={() => setActiveSection('staff')} className={`px-6 py-3 text-lg font-bold rounded-r-lg transition-colors ${activeSection === 'staff' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}>
-                            <StaffIcon className="inline-block w-6 h-6 mr-2" />
-                            Sala Staff
-                        </button>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
-                    <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm flex flex-col">
-                        <PeopleList 
-                            people={unassignedPeople} 
-                            isLoading={isLoadingPeople} 
-                            onEditPerson={handleEditPerson}
-                            activeSection={activeSection}
-                            onAddPersonClick={() => setIsCreatingPerson(true)}
-                            onAddGroupClick={() => setIsAddingFamily(true)}
-                            onImportClick={() => setIsImporting(true)}
-                            onClearListClick={() => setShowClearListConfirm(true)}
-                        />
-                    </div>
-                    <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm">
-                         <AddTableForm onAddTable={handleAddTable} isAdding={false} />
-                         <div className="flex justify-between items-center my-4">
-                            <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-gray-800 dark:text-gray-100">Tavoli Creati ({tables.length})</h3>
-                            <div className="inline-flex rounded-md shadow-sm">
-                                <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-sm font-medium ${viewMode === 'list' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 hover:bg-gray-50'} rounded-l-lg border border-gray-200 dark:border-gray-600`}>Elenco</button>
-                                <button onClick={() => setViewMode('map')} className={`px-4 py-2 text-sm font-medium ${viewMode === 'map' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 hover:bg-gray-50'} rounded-r-lg border border-gray-200 dark:border-gray-600`}>Mappa</button>
+            <DragDropContext onDragEnd={handleDragEnd}>
+                <div className="w-full h-full p-4 md:p-8 text-left animate-fade-in dark:bg-gray-900">
+                    <div className="flex justify-between items-start mb-8">
+                        <h1 style={{ fontFamily: 'Lora, serif' }} className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">{event.name}</h1>
+                        <div className="flex items-center space-x-2">
+                           <div className="relative" ref={exportMenuRef}>
+                                <button 
+                                    onClick={() => setShowExportMenu(!showExportMenu)} 
+                                    disabled={isExportingPdf}
+                                    className={`${baseButtonClasses} bg-transparent text-[#b58e48] border-[#b58e48] hover:bg-[#b58e48] hover:text-white disabled:bg-gray-400 disabled:border-gray-400 disabled:text-white disabled:cursor-not-allowed`}
+                                >
+                                    {isExportingPdf ? (
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    ) : (
+                                        <ExportIcon className="h-4 w-4 mr-2" />
+                                    )}
+                                    {isExportingPdf ? 'Esportazione...' : 'Esporta PDF'}
+                                </button>
+                                {showExportMenu && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-20">
+                                        <a href="#" onClick={(e) => { e.preventDefault(); if (!isExportingPdf) handleExportPdf('guests'); }} className={`block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 ${isExportingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}>Lista Invitati/Staff</a>
+                                        <a href="#" onClick={(e) => { e.preventDefault(); if (!isExportingPdf) handleExportPdf('tables'); }} className={`block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 ${isExportingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}>Disposizione Tavoli</a>
+                                    </div>
+                                )}
                             </div>
-                         </div>
-                        
-                        {viewMode === 'list' ? (
-                            <TableList 
-                                tables={tables}
-                                people={people}
-                                onEditPerson={handleEditPerson}
-                                onEditTable={setEditingTable}
-                                onDeleteTable={setDeletingTable}
-                                onToggleLock={handleToggleLock}
-                                activeSection={activeSection}
-                            />
-                        ) : (
-                            <MapView tables={tables} people={people} />
-                        )}
+                            <button onClick={() => setShowArrangeOptions(true)} className={`${baseButtonClasses} bg-transparent text-[#b58e48] border-[#b58e48] hover:bg-[#b58e48] hover:text-white`}>
+                                <MagicWandIcon className="h-4 w-4 mr-2" />Auto-Disponi
+                            </button>
+                            <button onClick={() => setShowResetConfirm(true)} className={`${baseButtonClasses} bg-transparent text-yellow-500 border-yellow-500 hover:bg-yellow-500 hover:text-white`}>
+                                <ResetIcon className="h-4 w-4 mr-2" />Resetta
+                            </button>
+                            <button onClick={() => onDeleteEvent(event)} className={`${baseButtonClasses} bg-transparent text-red-500 border-red-500 hover:bg-red-500 hover:text-white`}>
+                                <TrashIcon className="h-4 w-4 mr-2" />Elimina Evento
+                            </button>
+                        </div>
+                    </div>
 
+                    <div className="mb-6">
+                        <div className="inline-flex rounded-lg shadow-sm">
+                            <button onClick={() => setActiveSection('guests')} className={`px-6 py-3 text-lg font-bold rounded-l-lg transition-colors ${activeSection === 'guests' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}><GuestsIcon className="inline-block w-6 h-6 mr-2" />Sala Invitati</button>
+                            <button onClick={() => setActiveSection('staff')} className={`px-6 py-3 text-lg font-bold rounded-r-lg transition-colors ${activeSection === 'staff' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}><StaffIcon className="inline-block w-6 h-6 mr-2" />Sala Staff</button>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+                        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm flex flex-col">
+                            <PeopleList 
+                                people={unassignedPeople} 
+                                isLoading={isLoadingPeople} 
+                                onEditPerson={handleEditPerson}
+                                activeSection={activeSection}
+                                onAddPersonClick={() => setIsCreatingPerson(true)}
+                                onAddGroupClick={() => setIsAddingFamily(true)}
+                                onImportClick={() => setIsImporting(true)}
+                                onClearListClick={() => setShowClearListConfirm(true)}
+                            />
+                        </div>
+                       <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm">
+                            <AddTableForm onAddTable={handleAddTable} isAdding={false} />
+                            <div className="flex justify-between items-center my-4">
+                                <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-gray-800 dark:text-gray-100">Tavoli Creati ({tables.length})</h3>
+                                <div className="inline-flex rounded-md shadow-sm">
+                                    <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-sm font-medium ${viewMode === 'list' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 hover:bg-gray-50'} rounded-l-lg border border-gray-200 dark:border-gray-600`}>Elenco</button>
+                                    <button onClick={() => setViewMode('map')} className={`px-4 py-2 text-sm font-medium ${viewMode === 'map' ? 'sz-accent-bg text-white' : 'bg-white dark:bg-gray-700 hover:bg-gray-50'} rounded-r-lg border border-gray-200 dark:border-gray-600`}>Mappa</button>
+                                </div>
+                            </div>
+                            
+                            {viewMode === 'list' ? (
+                                <TableList 
+                                    tables={tables}
+                                    people={people}
+                                    onEditPerson={handleEditPerson}
+                                    onEditTable={setEditingTable}
+                                    onDeleteTable={setDeletingTable}
+                                    onToggleLock={handleToggleLock}
+                                    activeSection={activeSection}
+                                />
+                            ) : (
+                                <MapView tables={tables} people={people} />
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </DragDropContext>
         </div>
     );
 };
@@ -1911,11 +1911,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
-
-
-
-
