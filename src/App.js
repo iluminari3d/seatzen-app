@@ -1122,45 +1122,38 @@ function EventView({ event, db, user, onDeleteEvent }) {
     try {
         await new Promise(resolve => {
             const img = new Image();
-            // Assicurati che l'immagine possa essere caricata da origini diverse
-            // (importante per il corretto funzionamento del canvas)
             img.src = '/logos/seatzen-logo.png'; 
             
             img.onload = () => {
-                // --- NUOVA LOGICA CON CANVAS ---
-                // 1. Creiamo un elemento <canvas> invisibile
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-
-                // 2. Otteniamo il "contesto" 2D per poterci disegnare sopra
-                const ctx = canvas.getContext('2d');
-
-                // 3. Disegniamo l'immagine che abbiamo caricato dentro al canvas
-                ctx.drawImage(img, 0, 0);
-
-                // 4. Convertiamo il contenuto del canvas in una stringa di testo Base64
-                // Questo è un formato universale che jsPDF capisce sempre.
-                const dataURL = canvas.toDataURL('image/png');
-                // --- FINE NUOVA LOGICA ---
-
                 const doc = new jsPDF();
-                
-                // 5. Passiamo questa stringa al PDF invece dell'oggetto immagine.
-                doc.addImage(dataURL, 'PNG', 150, 8, 45, 12);
 
-                // ...tutto il resto del codice rimane identico...
-                const brandColor = '#b58e48';
+                // --- INIZIO NUOVE MODIFICHE ---
+
+                // 1. Calcoliamo le proporzioni corrette del logo
+                const logoWidth = 45; // Imposta la larghezza che desideri nel PDF
+                const aspectRatio = img.width / img.height;
+                const logoHeight = logoWidth / aspectRatio; // L'altezza viene calcolata automaticamente
+
+                // 2. Inserisci qui il vero colore del tuo brand
+                const brandColor = '#b58e48'; // <-- SOSTITUISCI QUESTO COLORE CON IL TUO
+
+                // --- FINE NUOVE MODIFICHE ---
+                
+                // Usiamo le nuove variabili per aggiungere l'immagine senza distorsioni
+                doc.addImage(img, 'PNG', 150, 8, logoWidth, logoHeight);
+
                 doc.setTextColor(brandColor);
                 const title = `${event.name}`;
                 doc.setFont(undefined, 'bold');
                 doc.text(title, 14, 15);
+                
+                // ... il resto della funzione rimane identico ...
                 doc.setFont(undefined, 'normal');
                 doc.setTextColor('#6b7280');
                 doc.text(new Date(event.date).toLocaleDateString('it-IT'), 14, 22);
                 const tableOptions = {
                     startY: 35,
-                    styles: { font: 'inter', cellPadding: 2 },
+                    styles: { font: 'helvetica', cellPadding: 2 },
                     headStyles: { fillColor: brandColor, textColor: '#ffffff', fontStyle: 'bold' },
                     alternateRowStyles: { fillColor: '#f3f4f6' }
                 };
@@ -1902,6 +1895,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
