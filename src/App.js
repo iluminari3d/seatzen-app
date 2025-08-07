@@ -774,13 +774,28 @@ function AddTableForm({ onAddTable, isAdding }) {
 };
 
 function TableCard({ table, people, onDragStart, onDragOver, onDrop, isDragOver, onEditPerson, onEditTable, onDeleteTable, onToggleLock, activeSection }) {
-    const isFull = people.length >= table.capacity;
+    
+    // --- INIZIO MODIFICA ---
+    // Controlliamo se il nome del tavolo (in minuscolo) contiene la parola "sposi"
+    const isCoupleTable = table.name.toLowerCase().includes('sposi');
+    
+    // Se è il tavolo degli sposi, la capacità visualizzata è pari al numero di persone sedute.
+    // Altrimenti, usiamo la capacità normale del tavolo.
+    const displayCapacity = isCoupleTable ? people.length : table.capacity;
+
+    // Aggiorniamo anche la logica per considerare il tavolo "pieno"
+    const isFull = people.length >= displayCapacity;
+    // --- FINE MODIFICA ---
+
     const baseClasses = "bg-white dark:bg-gray-800 rounded-lg shadow p-4 animate-fade-in transition-all duration-200 relative";
+    // Usiamo la nuova logica per 'isFull'
     const stateClasses = isDragOver && !isFull && !table.locked ? "ring-2 scale-105 sz-focus-ring" : isFull ? "bg-red-100 dark:bg-red-900/20" : "";
     const lockedClasses = table.locked ? "opacity-70 border-2 border-blue-300 dark:border-blue-700" : "";
+    
     return (
         <div onDragOver={onDragOver} onDrop={onDrop} className={`${baseClasses} ${stateClasses} ${lockedClasses}`}>
             <div className="absolute top-2 right-2 flex items-center space-x-1">
+                {/* ... (i pulsanti rimangono invariati) ... */}
                 <button onClick={() => onToggleLock(table.id, !table.locked)} title={table.locked ? "Sblocca tavolo" : "Blocca tavolo"} className="p-1 text-gray-400 hover:text-blue-500">
                     {table.locked ? <LockIcon className="h-5 w-5" /> : <UnlockIcon className="h-5 w-5" />}
                 </button>
@@ -793,7 +808,8 @@ function TableCard({ table, people, onDragStart, onDragOver, onDrop, isDragOver,
             </div>
             <h4 style={{fontFamily: 'Lora, serif'}} className="text-lg font-bold sz-accent-text flex justify-between items-center pr-24">
                 <span>{table.name}</span>
-                <span className={`text-sm font-mono p-1 rounded ${isFull ? 'text-red-700 bg-red-200 dark:text-red-200 dark:bg-red-800' : 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-700'}`}>{people.length}/{table.capacity}</span>
+                {/* Usiamo la nuova capacità dinamica per la visualizzazione */}
+                <span className={`text-sm font-mono p-1 rounded ${isFull ? 'text-red-700 bg-red-200 dark:text-red-200 dark:bg-red-800' : 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-700'}`}>{people.length}/{displayCapacity}</span>
             </h4>
             <ul className="mt-2 space-y-1 text-sm min-h-[2rem]">
                 {people.map(person => <GuestListItem key={person.id} guest={person} onDragStart={onDragStart} onEdit={onEditPerson} activeSection={activeSection} />)}
@@ -1895,6 +1911,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
