@@ -1124,7 +1124,6 @@ function EventView({ event, db, user, onDeleteEvent }) {
             const img = new Image();
             // Assicurati che l'immagine possa essere caricata da origini diverse
             // (importante per il corretto funzionamento del canvas)
-            img.crossOrigin = "Anonymous";
             img.src = '/logos/seatzen-logo.png'; 
             
             img.onload = () => {
@@ -1903,6 +1902,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
