@@ -1150,7 +1150,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
                 doc.addImage(dataURL, 'PNG', 150, 8, 45, 12);
 
                 // ...tutto il resto del codice rimane identico...
-                const brandColor = '#2563eb';
+                const brandColor = '#b58e48';
                 doc.setTextColor(brandColor);
                 const title = `${event.name}`;
                 doc.setFont(undefined, 'bold');
@@ -1160,7 +1160,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
                 doc.text(new Date(event.date).toLocaleDateString('it-IT'), 14, 22);
                 const tableOptions = {
                     startY: 35,
-                    styles: { font: 'helvetica', cellPadding: 2 },
+                    styles: { font: 'inter', cellPadding: 2 },
                     headStyles: { fillColor: brandColor, textColor: '#ffffff', fontStyle: 'bold' },
                     alternateRowStyles: { fillColor: '#f3f4f6' }
                 };
@@ -1902,6 +1902,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
