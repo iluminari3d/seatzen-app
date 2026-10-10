@@ -5,6 +5,7 @@ import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, d
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { buildNameIndex, findSeatingIssues, formatSeatingIssues, hasMustLinkOutside, packPeople, resolvePreferenceLists, summarizeWarnings } from './arrangement';
 
 
 // --- Author: I Luminari SRLS - www.iluminari3d.com ---
@@ -1312,20 +1313,22 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		const lockedTableIds = tables.filter(t => t.locked).map(t => t.id);
 		let remainingPeople = [...people.filter(p => !lockedTableIds.includes(p.tableId))];
 		let seatedPersonIds = new Set();
+		const arrangementWarnings = [];
 	
 		const seatGroup = (peopleToSeat, baseTableName, capacity, shape) => {
-			let tableCounter = 1;
-			const needsNumbering = peopleToSeat.length > capacity;
-			while (peopleToSeat.length > 0) {
+			// packPeople tiene insieme chi è legato, separa chi si evita e avvicina chi si desidera
+			const { tables: plannedTables, warnings } = packPeople(peopleToSeat, capacity);
+			arrangementWarnings.push(...warnings);
+			const needsNumbering = plannedTables.length > 1;
+			plannedTables.forEach((tableGuests, tableIndex) => {
 				const newTableRef = doc(collection(db, tablesPath));
-				const tableName = `${baseTableName} ${needsNumbering ? tableCounter++ : ''}`.trim();
+				const tableName = `${baseTableName} ${needsNumbering ? tableIndex + 1 : ''}`.trim();
 				arrangementBatch.set(newTableRef, { name: tableName, capacity, shape, section: activeSection, createdAt: serverTimestamp(), locked: false });
-				const tableGuests = peopleToSeat.splice(0, capacity);
 				tableGuests.forEach(guest => {
 					arrangementBatch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
 					seatedPersonIds.add(guest.id);
 				});
-			}
+			});
 		};
 	
 		if (!options.noCoupleTable) {
@@ -1340,7 +1343,9 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		remainingPeople = remainingPeople.filter(p => !seatedPersonIds.has(p.id));
 	
 		if (options.createKidsTable) {
-			const kids = remainingPeople.filter(p => YOUNG_CHILD_RANGES.includes(p.age));
+			const youngIds = new Set(remainingPeople.filter(p => YOUNG_CHILD_RANGES.includes(p.age)).map(p => p.id));
+			// Un bambino legato a un adulto da "deve sedersi con" resta con lui e non va al tavolo bambini
+			const kids = remainingPeople.filter(p => youngIds.has(p.id) && !hasMustLinkOutside(p, remainingPeople, youngIds));
 			if (kids.length > 0) {
 				seatGroup(kids, 'Tavolo Bambini', options.capacity, options.tableType);
 			}
@@ -1362,13 +1367,16 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		seatGroup(remainingPeople, 'Tavolo', options.capacity, options.tableType);
 	
 		await arrangementBatch.commit();
+		return arrangementWarnings;
 	}
 
 	const handleAutoArrange = async (options) => {
 		setIsArranging(true);
 		try {
-			await runAutoArrange(options);
+			const warnings = await runAutoArrange(options);
 			setShowArrangeOptions(false);
+			const summary = summarizeWarnings(warnings);
+			if (summary.length > 0) alert(`Disposizione completata, con alcune note:\n\n${summary.join('\n\n')}`);
 		} catch (error) {
 			console.error("Errore durante l'auto-disposizione:", error);
 			alert("Si è verificato un errore durante l'auto-disposizione. Controlla la disposizione attuale e riprova.");
@@ -1510,19 +1518,33 @@ function EventView({ event, db, user, onDeleteEvent }) {
             const allGroupsMap = new Map(allGroupsSnapshot.docs.map(d => [d.data().name, d.id]));
 
             const peopleBatch = writeBatch(db);
-            peopleToImport.forEach(person => {
-                const newPersonRef = doc(collection(db, peoplePath));
+            // Gli id si assegnano prima: le preferenze del CSV citano altri invitati per nome e vanno trasformate in id
+            const importRefs = peopleToImport.map(() => doc(collection(db, peoplePath)));
+            const nameIndex = buildNameIndex([
+                ...(activeSection === 'guests' ? people : []),
+                ...peopleToImport.map((p, i) => ({ id: importRefs[i].id, name: p.name })),
+            ]);
+            const unresolvedPreferences = [];
+            peopleToImport.forEach((person, i) => {
+                const newPersonRef = importRefs[i];
                 let personData;
 
                 if (person.type === 'guest') {
                     const groupId = allGroupsMap.get(person.groupName) || '';
-                    personData = { name: person.name, age: person.age, strictGroupId: groupId, likes: [], dislikes: [], mustSitWith: [], tableId: null, createdAt: serverTimestamp() };
+                    const prefs = resolvePreferenceLists(person, nameIndex, newPersonRef.id);
+                    prefs.unresolved.forEach(u => unresolvedPreferences.push(`${person.name}: ${u.name} (${u.reason})`));
+                    personData = { name: person.name, age: person.age, strictGroupId: groupId, likes: prefs.likes, dislikes: prefs.dislikes, mustSitWith: prefs.mustSitWith, tableId: null, createdAt: serverTimestamp() };
                 } else {
                     personData = { name: person.name, role: person.role, tableId: null, createdAt: serverTimestamp() };
                 }
                 peopleBatch.set(newPersonRef, personData);
             });
             await peopleBatch.commit();
+            if (unresolvedPreferences.length > 0) {
+                const shown = unresolvedPreferences.slice(0, 10).join('\n');
+                const more = unresolvedPreferences.length > 10 ? `\n... e altre ${unresolvedPreferences.length - 10}` : '';
+                alert(`Importazione completata. Alcune preferenze non sono state collegate a nessun invitato:\n\n${shown}${more}`);
+            }
         } catch (error) {
             console.error("Errore importazione:", error);
         } finally {
@@ -1610,6 +1632,12 @@ function EventView({ event, db, user, onDeleteEvent }) {
             }
         }
         
+        // 4b. Avvisa se lo spostamento contraddice le preferenze ("non vuole sedersi con" / "deve sedersi con")
+        if (destination.droppableId !== 'unassigned-list' && activeSection === 'guests') {
+            const issueText = formatSeatingIssues(person, findSeatingIssues(person, destination.droppableId, people));
+            if (issueText && !window.confirm(`${issueText}\n\nVuoi spostarlo comunque?`)) return;
+        }
+
         // 5. Aggiorna il database
         const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
         const personRef = doc(db, `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`, draggableId);
