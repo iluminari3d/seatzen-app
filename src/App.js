@@ -5,6 +5,7 @@ import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, d
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { commitInChunks, op } from './batching';
 import { buildNameIndex, findSeatingIssues, formatSeatingIssues, hasMustLinkOutside, packPeople, resolvePreferenceLists, summarizeWarnings } from './arrangement';
 
 
@@ -1276,14 +1277,18 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
 		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
 		const tablePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables/${table.id}`;
-		const batch = writeBatch(db);
-		people.filter(p => p.tableId === table.id).forEach(p => {
-			batch.update(doc(db, peoplePath, p.id), { tableId: null });
-		});
-		batch.delete(doc(db, tablePath));
-		await batch.commit();
-		setDeletingTable(null);
-		setIsDeletingTable(false);
+		// Prima si liberano le persone, il tavolo si elimina per ultimo
+		const ops = people.filter(p => p.tableId === table.id).map(p => op.update(doc(db, peoplePath, p.id), { tableId: null }));
+		ops.push(op.delete(doc(db, tablePath)));
+		try {
+			await commitInChunks(() => writeBatch(db), ops);
+		} catch (error) {
+			console.error("Errore eliminazione tavolo:", error);
+			alert("Non è stato possibile eliminare il tavolo. Riprova.");
+		} finally {
+			setDeletingTable(null);
+			setIsDeletingTable(false);
+		}
 	}
 	
 	const handleToggleLock = async (tableId, locked) => {
@@ -1297,19 +1302,9 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
 		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
 		
-		const clearBatch = writeBatch(db);
-		people.forEach(p => {
-			const table = tables.find(t => t.id === p.tableId);
-			if (p.tableId && (!table || !table.locked)) {
-				clearBatch.update(doc(db, peoplePath, p.id), { tableId: null });
-			}
-		});
-		tables.filter(t => !t.locked).forEach(t => {
-			clearBatch.delete(doc(db, tablesPath, t.id));
-		});
-		await clearBatch.commit();
-		
-		const arrangementBatch = writeBatch(db);
+		// Un'unica lista di operazioni, in quest'ordine: nuovi tavoli + assegnazioni, poi eliminazione dei vecchi tavoli.
+		// Chi non finisce in nessun nuovo tavolo viene liberato. Così un errore a metà non lascia persone su tavoli già spariti.
+		const arrangementOps = [];
 		const lockedTableIds = tables.filter(t => t.locked).map(t => t.id);
 		let remainingPeople = [...people.filter(p => !lockedTableIds.includes(p.tableId))];
 		let seatedPersonIds = new Set();
@@ -1323,9 +1318,9 @@ function EventView({ event, db, user, onDeleteEvent }) {
 			plannedTables.forEach((tableGuests, tableIndex) => {
 				const newTableRef = doc(collection(db, tablesPath));
 				const tableName = `${baseTableName} ${needsNumbering ? tableIndex + 1 : ''}`.trim();
-				arrangementBatch.set(newTableRef, { name: tableName, capacity, shape, section: activeSection, createdAt: serverTimestamp(), locked: false });
+				arrangementOps.push(op.set(newTableRef, { name: tableName, capacity, shape, section: activeSection, createdAt: serverTimestamp(), locked: false }));
 				tableGuests.forEach(guest => {
-					arrangementBatch.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id });
+					arrangementOps.push(op.update(doc(db, peoplePath, guest.id), { tableId: newTableRef.id }));
 					seatedPersonIds.add(guest.id);
 				});
 			});
@@ -1366,7 +1361,17 @@ function EventView({ event, db, user, onDeleteEvent }) {
 
 		seatGroup(remainingPeople, 'Tavolo', options.capacity, options.tableType);
 	
-		await arrangementBatch.commit();
+		// Persone che stavano su un tavolo da eliminare (o inesistente) e non sono state risistemate
+		people.forEach(p => {
+			if (!p.tableId || seatedPersonIds.has(p.id)) return;
+			const table = tables.find(t => t.id === p.tableId);
+			if (!table || !table.locked) arrangementOps.push(op.update(doc(db, peoplePath, p.id), { tableId: null }));
+		});
+		tables.filter(t => !t.locked).forEach(t => {
+			arrangementOps.push(op.delete(doc(db, tablesPath, t.id)));
+		});
+
+		await commitInChunks(() => writeBatch(db), arrangementOps);
 		return arrangementWarnings;
 	}
 
@@ -1391,22 +1396,27 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
 		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
 		
-		const batch = writeBatch(db);
-
+		// Prima si liberano le persone, i tavoli si eliminano per ultimi
+		const ops = [];
 		people.forEach(p => {
 			const table = tables.find(t => t.id === p.tableId);
 			if (p.tableId && (!table || !table.locked)) {
-				batch.update(doc(db, peoplePath, p.id), { tableId: null });
+				ops.push(op.update(doc(db, peoplePath, p.id), { tableId: null }));
 			}
 		});
-		
 		tables.filter(t => !t.locked).forEach(t => {
-			batch.delete(doc(db, tablesPath, t.id));
+			ops.push(op.delete(doc(db, tablesPath, t.id)));
 		});
 
-		await batch.commit();
-		setIsResetting(false);
-		setShowResetConfirm(false);
+		try {
+			await commitInChunks(() => writeBatch(db), ops);
+		} catch (error) {
+			console.error("Errore reset disposizione:", error);
+			alert("Non è stato possibile azzerare la disposizione. Riprova.");
+		} finally {
+			setIsResetting(false);
+			setShowResetConfirm(false);
+		}
 	}
 
     const handleClearList = async () => {
@@ -1417,9 +1427,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
         try {
             const q = query(collection(db, path));
             const snapshot = await getDocs(q);
-            const batch = writeBatch(db);
-            snapshot.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
+            await commitInChunks(() => writeBatch(db), snapshot.docs.map(d => op.delete(d.ref)));
         } catch (error) {
             console.error("Errore pulizia lista:", error);
         } finally {
@@ -1498,26 +1506,19 @@ function EventView({ event, db, user, onDeleteEvent }) {
         
         try {
             const groupNamesInCsv = [...new Set(peopleToImport.map(p => p.groupName).filter(Boolean))];
-            
-            const existingGroupsQuery = query(collection(db, groupsPath), where('name', 'in', groupNamesInCsv.length > 0 ? groupNamesInCsv : [' ']));
-            const existingGroupsSnapshot = await getDocs(existingGroupsQuery);
-            const existingGroupNames = existingGroupsSnapshot.docs.map(d => d.data().name);
 
-            const groupsToCreate = groupNamesInCsv.filter(name => !existingGroupNames.includes(name));
-
-            if (groupsToCreate.length > 0) {
-                const groupsBatch = writeBatch(db);
-                groupsToCreate.forEach(name => {
-                    const newGroupRef = doc(collection(db, groupsPath));
-                    groupsBatch.set(newGroupRef, { name, createdAt: serverTimestamp() });
-                });
-                await groupsBatch.commit();
-            }
-
+            // Un solo caricamento dei gruppi esistenti (la query "in" di Firestore accetta pochi valori)
             const allGroupsSnapshot = await getDocs(collection(db, groupsPath));
             const allGroupsMap = new Map(allGroupsSnapshot.docs.map(d => [d.data().name, d.id]));
 
-            const peopleBatch = writeBatch(db);
+            const importOps = [];
+            // I gruppi mancanti si creano per primi; gli id si assegnano subito, senza rileggere
+            groupNamesInCsv.filter(name => !allGroupsMap.has(name)).forEach(name => {
+                const newGroupRef = doc(collection(db, groupsPath));
+                importOps.push(op.set(newGroupRef, { name, createdAt: serverTimestamp() }));
+                allGroupsMap.set(name, newGroupRef.id);
+            });
+
             // Gli id si assegnano prima: le preferenze del CSV citano altri invitati per nome e vanno trasformate in id
             const importRefs = peopleToImport.map(() => doc(collection(db, peoplePath)));
             const nameIndex = buildNameIndex([
@@ -1537,9 +1538,9 @@ function EventView({ event, db, user, onDeleteEvent }) {
                 } else {
                     personData = { name: person.name, role: person.role, tableId: null, createdAt: serverTimestamp() };
                 }
-                peopleBatch.set(newPersonRef, personData);
+                importOps.push(op.set(newPersonRef, personData));
             });
-            await peopleBatch.commit();
+            await commitInChunks(() => writeBatch(db), importOps);
             if (unresolvedPreferences.length > 0) {
                 const shown = unresolvedPreferences.slice(0, 10).join('\n');
                 const more = unresolvedPreferences.length > 10 ? `\n... e altre ${unresolvedPreferences.length - 10}` : '';
@@ -1940,18 +1941,16 @@ function App() {
         const eventRef = doc(db, `artifacts/${appId}/users/${user.uid}/events`, deletingEvent.id);
         
         try {
-            const batch = writeBatch(db);
-            
+            // Prima i documenti figli, l'evento per ultimo: se qualcosa va storto l'evento resta visibile e si può riprovare
+            const deleteOps = [];
             const collectionsToDelete = ['guests', 'staff', 'tables', 'strictGroups'];
             for (const coll of collectionsToDelete) {
-                const collRef = collection(eventRef, coll);
-                const snapshot = await getDocs(query(collRef));
-                snapshot.forEach(doc => batch.delete(doc.ref));
+                const snapshot = await getDocs(collection(eventRef, coll));
+                snapshot.forEach(d => deleteOps.push(op.delete(d.ref)));
             }
+            deleteOps.push(op.delete(eventRef));
 
-            batch.delete(eventRef);
-            
-            await batch.commit();
+            await commitInChunks(() => writeBatch(db), deleteOps);
             
             setDeletingEvent(null);
             if (selectedEvent?.id === deletingEvent.id) {
