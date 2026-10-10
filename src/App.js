@@ -19,6 +19,23 @@ const YOUNG_CHILD_RANGES = ["0-2 anni", "3-12 anni"];
 const STAFF_ROLES = ["Staff", "Fotografo", "Videomaker", "DJ", "Musicista", "Animatore", "Wedding Planner", "Altro"];
 const DEFAULT_STRICT_GROUPS = ["Sposi", "Testimoni Sposo", "Testimoni Sposa", "Genitori Sposo", "Genitori Sposa", "Amici Sposo", "Amici Sposa", "Parenti Sposo", "Parenti Sposa"];
 
+// --- UTILITY ---
+// Neutralizza i caratteri HTML nei testi inseriti dall'utente (nomi di eventi, tavoli, persone, anche da CSV)
+// prima di inserirli in stringhe passate a dangerouslySetInnerHTML.
+const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+// Se la prima riga di un CSV è un'intestazione (es. "Nome,Fascia d'Età,..."), la scarta.
+const dropCsvHeader = (rows) => {
+    if (rows.length === 0) return rows;
+    const firstCell = rows[0].split(',')[0].trim().toLowerCase();
+    return ['nome', 'nome invitato', 'name'].includes(firstCell) ? rows.slice(1) : rows;
+};
+
 // --- HOOKS PERSONALIZZATI ---
 function useTheme() {
     const [theme, setTheme] = useState(() => {
@@ -201,7 +218,7 @@ function ImportPeopleModal({ existingGroups, onSave, onClose, isSaving, activeSe
                 let peopleData;
                 if (isGuestImport) {
                     if (file.name.endsWith('.csv')) {
-                        peopleData = content.split('\n').filter(row => row.trim() !== '').map((row, index) => {
+                        peopleData = dropCsvHeader(content.split('\n').filter(row => row.trim() !== '')).map((row, index) => {
                             const [name, age, groupName, mustSitWith, likes, dislikes] = row.split(',').map(s => s.trim());
                             return { id: `parsed-${index}`, name: name || '', age: AGE_RANGES.includes(age) ? age : AGE_RANGES[0], groupName: groupName || '', mustSitWithRaw: mustSitWith || '', likesRaw: likes || '', dislikesRaw: dislikes || '', type: 'guest' };
                         });
@@ -212,7 +229,7 @@ function ImportPeopleModal({ existingGroups, onSave, onClose, isSaving, activeSe
                     }
                 } else { // Importazione Staff
                     if (file.name.endsWith('.csv')) {
-                        peopleData = content.split('\n').filter(row => row.trim() !== '').map((row, index) => {
+                        peopleData = dropCsvHeader(content.split('\n').filter(row => row.trim() !== '')).map((row, index) => {
                             const [name, role] = row.split(',').map(s => s.trim());
                             return { id: `parsed-${index}`, name: name || '', role: STAFF_ROLES.includes(role) ? role : STAFF_ROLES[0], type: 'staff' };
                         });
@@ -723,7 +740,26 @@ function PeopleList({ people, isLoading, onEditPerson, activeSection, onAddPerso
         <div className="w-full">
             <div className="flex justify-between items-center mb-4">
                 <h3 style={{fontFamily: 'Lora, serif'}} className="text-xl font-bold text-gray-800 dark:text-gray-100">{activeSection === 'guests' ? 'Invitati' : 'Staff'}</h3>
-                {/* ... (codice del menu a tendina "Aggiungi" rimane invariato) ... */}
+                <div className="relative" ref={addMenuRef}>
+                    <button onClick={() => setShowAddMenu(!showAddMenu)} className="sz-accent-bg text-white font-bold py-2 px-4 rounded-lg shadow sz-accent-bg-hover flex items-center">
+                        <PlusIcon className="h-5 w-5 mr-2"/> Aggiungi
+                    </button>
+                    {showAddMenu && (
+                        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-30 py-1">
+                            <a href="#" onClick={(e) => { e.preventDefault(); onAddPersonClick(); setShowAddMenu(false); }} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                <UserAvatarIcon className="h-5 w-5 mr-3"/> Aggiungi Persona
+                            </a>
+                            {activeSection === 'guests' && (
+                                <a href="#" onClick={(e) => { e.preventDefault(); onAddGroupClick(); setShowAddMenu(false); }} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                    <GroupIcon className="h-5 w-5 mr-3"/> Aggiungi Gruppo
+                                </a>
+                            )}
+                            <a href="#" onClick={(e) => { e.preventDefault(); onImportClick(); setShowAddMenu(false); }} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                <FileImportIcon className="h-5 w-5 mr-3"/> Importa da File
+                            </a>
+                        </div>
+                    )}
+                </div>
             </div>
             <button onClick={onClearListClick} className="w-full text-center text-xs text-red-500 dark:text-red-400 hover:underline mb-4">Svuota Lista</button>
             
@@ -1089,6 +1125,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
     const [showClearListConfirm, setShowClearListConfirm] = useState(false);
     const [isClearingList, setIsClearingList] = useState(false);
     const [isAddingFamily, setIsAddingFamily] = useState(false);
+    const [isSavingFamily, setIsSavingFamily] = useState(false);
     const [isExportingPdf, setIsExportingPdf] = useState(false);
 
     // useEffect per il menu di esportazione
@@ -1254,9 +1291,8 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		await updateDoc(doc(db, path), { locked });
 	}
 	
-	const handleAutoArrange = async (options) => {
-		setIsArranging(true);
-		const peopleCollection = 'guests';
+	const runAutoArrange = async (options) => {
+		const peopleCollection = activeSection === 'guests' ? 'guests' : 'staff';
 		const peoplePath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/${peopleCollection}`;
 		const tablesPath = `artifacts/${appId}/users/${user.uid}/events/${event.id}/tables`;
 		
@@ -1279,9 +1315,10 @@ function EventView({ event, db, user, onDeleteEvent }) {
 	
 		const seatGroup = (peopleToSeat, baseTableName, capacity, shape) => {
 			let tableCounter = 1;
+			const needsNumbering = peopleToSeat.length > capacity;
 			while (peopleToSeat.length > 0) {
 				const newTableRef = doc(collection(db, tablesPath));
-				const tableName = `${baseTableName} ${peopleToSeat.length > capacity ? tableCounter++ : ''}`.trim();
+				const tableName = `${baseTableName} ${needsNumbering ? tableCounter++ : ''}`.trim();
 				arrangementBatch.set(newTableRef, { name: tableName, capacity, shape, section: activeSection, createdAt: serverTimestamp(), locked: false });
 				const tableGuests = peopleToSeat.splice(0, capacity);
 				tableGuests.forEach(guest => {
@@ -1325,8 +1362,19 @@ function EventView({ event, db, user, onDeleteEvent }) {
 		seatGroup(remainingPeople, 'Tavolo', options.capacity, options.tableType);
 	
 		await arrangementBatch.commit();
-		setIsArranging(false);
-		setShowArrangeOptions(false);
+	}
+
+	const handleAutoArrange = async (options) => {
+		setIsArranging(true);
+		try {
+			await runAutoArrange(options);
+			setShowArrangeOptions(false);
+		} catch (error) {
+			console.error("Errore durante l'auto-disposizione:", error);
+			alert("Si è verificato un errore durante l'auto-disposizione. Controlla la disposizione attuale e riprova.");
+		} finally {
+			setIsArranging(false);
+		}
 	}
 
 	const handleResetLayout = async () => {
@@ -1483,6 +1531,42 @@ function EventView({ event, db, user, onDeleteEvent }) {
         }
     };
 
+    const handleSaveFamily = async (groupName, members) => {
+        if (!db || !user || !event) return;
+        setIsSavingFamily(true);
+        const base = `artifacts/${appId}/users/${user.uid}/events/${event.id}`;
+        try {
+            const batch = writeBatch(db);
+
+            // Riusa il gruppo stretto se esiste già (confronto senza maiuscole/minuscole), altrimenti lo crea
+            let groupId = strictGroups.find(g => g.name.toLowerCase() === groupName.toLowerCase())?.id;
+            if (!groupId) {
+                const groupRef = doc(collection(db, `${base}/strictGroups`));
+                batch.set(groupRef, { name: groupName, createdAt: serverTimestamp() });
+                groupId = groupRef.id;
+            }
+
+            members.forEach(m => {
+                const personRef = doc(collection(db, `${base}/guests`));
+                // Un componente "Bambino" senza fascia d'età viene messo in 3-12 anni, così rientra nel Tavolo Bambini
+                const age = m.type === 'child' && m.age === AGE_RANGES[0] ? '3-12 anni' : m.age;
+                batch.set(personRef, {
+                    name: m.name.trim(), age, strictGroupId: groupId,
+                    likes: [], dislikes: [], mustSitWith: [], tableId: null,
+                    createdAt: serverTimestamp()
+                });
+            });
+
+            await batch.commit();
+            setIsAddingFamily(false);
+        } catch (error) {
+            console.error("Errore salvataggio gruppo:", error);
+            alert("Impossibile salvare il gruppo. Riprova.");
+        } finally {
+            setIsSavingFamily(false);
+        }
+    };
+
     const handleDragEnd = async (result) => {
         const { source, destination, draggableId } = result;
 
@@ -1544,8 +1628,8 @@ function EventView({ event, db, user, onDeleteEvent }) {
 
     return (
         <div className="relative w-full h-full">
-            {deletingTable && <DeleteConfirmationModal title="Conferma Eliminazione Tavolo" message={`Sei sicuro di voler eliminare il tavolo <strong class="font-bold">${deletingTable.name}</strong>?`} onConfirm={() => handleDeleteTable(deletingTable)} onCancel={() => setDeletingTable(null)} isDeleting={isDeletingTable} />}
-			{deletingPerson && <DeleteConfirmationModal title="Conferma Eliminazione Persona" message={`Sei sicuro di voler eliminare <strong class="font-bold">${deletingPerson.name}</strong>?`} onConfirm={handleDeletePerson} onCancel={() => setDeletingPerson(null)} isDeleting={isDeletingPerson} />}
+            {deletingTable && <DeleteConfirmationModal title="Conferma Eliminazione Tavolo" message={`Sei sicuro di voler eliminare il tavolo <strong class="font-bold">${escapeHtml(deletingTable.name)}</strong>?`} onConfirm={() => handleDeleteTable(deletingTable)} onCancel={() => setDeletingTable(null)} isDeleting={isDeletingTable} />}
+			{deletingPerson && <DeleteConfirmationModal title="Conferma Eliminazione Persona" message={`Sei sicuro di voler eliminare <strong class="font-bold">${escapeHtml(deletingPerson.name)}</strong>?`} onConfirm={handleDeletePerson} onCancel={() => setDeletingPerson(null)} isDeleting={isDeletingPerson} />}
             {showResetConfirm && <DeleteConfirmationModal title="Resetta Disposizione" message={`Tutti gli invitati verranno rimossi dai tavoli <strong class="font-bold">non bloccati</strong>.`} onConfirm={handleResetLayout} onCancel={() => setShowResetConfirm(false)} isDeleting={isResetting} confirmText="Sì, resetta"/>}
 			{showArrangeOptions && <ArrangeOptionsModal onClose={() => setShowArrangeOptions(false)} onArrange={handleAutoArrange} isArranging={isArranging} guestGroups={strictGroups} />}
             {editingTable && <EditTableModal table={editingTable} onClose={() => setEditingTable(null)} onSave={handleUpdateTable} isSaving={isSavingTable} />}
@@ -1553,7 +1637,7 @@ function EventView({ event, db, user, onDeleteEvent }) {
             {isManagingGroups && <StrictGroupModal groups={strictGroups} onAdd={handleAddStrictGroup} onDelete={handleDeleteStrictGroup} onClose={() => setIsManagingGroups(false)} isSaving={isSavingGroup} />}
             {isImporting && <ImportPeopleModal existingGroups={strictGroups} onClose={() => setIsImporting(false)} onSave={handleImportSave} isSaving={isSavingImport} activeSection={activeSection} />}
             {showClearListConfirm && <DeleteConfirmationModal title="Svuota Lista" message={`Sei sicuro di voler eliminare <strong class="font-bold">tutti</strong> gli ${activeSection === 'guests' ? 'invitati' : 'staff'}? L'azione è irreversibile.`} onConfirm={handleClearList} onCancel={() => setShowClearListConfirm(false)} isDeleting={isClearingList} confirmText="Sì, svuota"/>}
-            {isAddingFamily && <AddFamilyModal onClose={() => setIsAddingFamily(false)} onSave={() => {}} isSaving={false} />}
+            {isAddingFamily && <AddFamilyModal onClose={() => setIsAddingFamily(false)} onSave={handleSaveFamily} isSaving={isSavingFamily} />}
 
             <DragDropContext onDragEnd={handleDragEnd}>
                 <div className="w-full h-full p-4 md:p-8 text-left animate-fade-in dark:bg-gray-900">
@@ -1872,7 +1956,7 @@ function App() {
 
     return (
         <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-             {deletingEvent && <DeleteConfirmationModal title="Conferma Eliminazione Evento" message={`Sei sicuro di voler eliminare permanentemente l'evento <strong class="font-bold">${deletingEvent.name}</strong>?<br/><span class="font-bold text-red-500">Tutti i dati collegati (invitati, staff, tavoli) verranno cancellati. Questa azione è irreversibile.</span>`} onConfirm={handleDeleteEvent} onCancel={() => setDeletingEvent(null)} isDeleting={isDeleting} />}
+             {deletingEvent && <DeleteConfirmationModal title="Conferma Eliminazione Evento" message={`Sei sicuro di voler eliminare permanentemente l'evento <strong class="font-bold">${escapeHtml(deletingEvent.name)}</strong>?<br/><span class="font-bold text-red-500">Tutti i dati collegati (invitati, staff, tavoli) verranno cancellati. Questa azione è irreversibile.</span>`} onConfirm={handleDeleteEvent} onCancel={() => setDeletingEvent(null)} isDeleting={isDeleting} />}
              {showSettings && <SettingsModal currentTheme={theme} onThemeChange={setTheme} onClose={() => setShowSettings(false)} />}
             
             <div className="relative">
